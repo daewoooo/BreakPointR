@@ -4,9 +4,9 @@
 \alias{createCompositeFile}
 \title{Create composite Strand-seq file}
 \usage{
-createCompositeFile(file.list, chromosomes = NULL, pairedEndReads = TRUE,
-  pair2frgm = FALSE, min.mapq = 10, filtAlt = FALSE, WC.cutoff = 0.9,
-  background = 0.05)
+createCompositeFile(file.list, chromosomes = NULL,
+  pairedEndReads = TRUE, pair2frgm = FALSE, min.mapq = 10,
+  filtAlt = FALSE, WC.cutoff = 0.9, background = 0.05)
 }
 \arguments{
 \item{file.list}{A list of BAM files to process.}
@@ -26,20 +26,12 @@ createCompositeFile(file.list, chromosomes = NULL, pairedEndReads = TRUE,
 \item{background}{The amount of background introduced into the genotype test.}
 }
 \value{
-A \code{\link[GenomicRanges]{GRanges}} object.
+A \code{\link{GRanges-class}} object.
 }
 \description{
 This function will move through BAM files in a folder, read in each individual file and go through each chromosome, 
 determine if the chromosome is WW or CC based on WCcutoff, reverse complement all reads in the WW file,
 append to a new composite file for that chromosome, order the composite file of each chromosome based on position.
-}
-\examples{
-## Get some example files
-inputfolder <- system.file("extdata", "example_bams", package="strandseqExampleData")
-files <- list.files(inputfolder, full.names=TRUE, pattern="bam$")
-## Create the composite file
-composite <- createCompositeFile(files, chromosomes='chr22', pairedEndReads=FALSE)
-                   
 }
 \author{
 Ashley Sanders, David Porubsky

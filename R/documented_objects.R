@@ -4,26 +4,11 @@
 #'
 #' @name BreakPoint
 #' @return
-#' \item{fragments}{A \code{\link[GenomicRanges]{GRanges}} object with read fragments.}
-#' \item{deltas}{A \code{\link[GenomicRanges]{GRanges}} object with deltaWs.}
-#' \item{breaks}{A \code{\link[GenomicRanges]{GRanges}} object containing the breakpoint coordinates.}
-#' \item{counts}{A \code{\link[GenomicRanges]{GRanges}} object with the regions between breakpoints.}
+#' \item{fragments}{A \code{\link{GRanges-class}} object with read fragments.}
+#' \item{deltas}{A \code{\link{GRanges-class}} object with deltaWs.}
+#' \item{breaks}{A \code{\link{GRanges-class}} object containing the breakpoint coordinates.}
+#' \item{counts}{A \code{\link{GRanges-class}} object with the regions between breakpoints.}
 #' \item{params}{A vector with parameters that were used to obtain the results.}
 #'
 #' @seealso runBreakpointr
-NULL
-
-
-#' BreakPoint objects for demonstration purposes
-#'
-#' A list of \code{\link{BreakPoint}} objects for demonstration purposes in examples of package \pkg{\link{breakpointR}}.
-#'
-#' @docType data
-#' @name example_BreakPoints
-#' @format A list with \code{\link{BreakPoint}} objects.
-#' @examples
-#'data(example_BreakPoints)
-#'length(example_BreakPoints)
-#'## Have a look at the first object
-#'example_BreakPoints[[1]]
 NULL

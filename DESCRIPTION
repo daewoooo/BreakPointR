@@ -1,16 +1,16 @@
 Package: breakpointR
 Type: Package
 Title: Find breakpoints in Strand-seq data
-Version: 0.99.0
+Version: 0.99.10
 Date: 2015-10-05
 Author: David Porubsky, Ashley Sanders, Aaron Taudt
 Maintainer: David Porubsky <david.porubsky@gmail.com>
 Description: This package implements functions for finding breakpoints, plotting and export of Strand-seq data.
 Depends:
-  R (>= 3.4.0),
+  R (>= 3.5),
   GenomicRanges,
   cowplot,
-  strandseqExampleData
+  breakpointRdata
 Imports:
   methods,
   utils,
@@ -36,4 +36,4 @@ VignetteBuilder: knitr
 Packaged: 2015-09-19 13:29:00 CET+1; Taudt
 biocViews: Software, Sequencing, DNASeq, SingleCell, Coverage
 URL: https://github.com/daewoooo/BreakPointR
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0

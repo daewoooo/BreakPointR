@@ -2,29 +2,25 @@
 #'
 #' Genotype the space between breakpoints with Fisher's exact test.
 #'
-#' @param breaks A \code{\link[GenomicRanges]{GRanges}} object with breakpoint coordinates.
-#' @param fragments A \code{\link[GenomicRanges]{GRanges}} object with read fragments.
+#' @param breaks A \code{\link{GRanges-class}} object with breakpoint coordinates.
+#' @param fragments A \code{\link{GRanges-class}} object with read fragments.
 #' @param background The percent (e.g. 0.05 = 5\%) of background reads allowed for WW or CC genotype calls.
 #' @param minReads The minimal number of reads between two breaks required for genotyping.
-#' @return A \code{\link[GenomicRanges]{GRanges}} object with genotyped breakpoint coordinates.
+#' @return A \code{\link{GRanges-class}} object with genotyped breakpoint coordinates.
 #' @author David Porubsky, Ashley Sanders, Aaron Taudt
 #' @importFrom stats fisher.test
+#' @importFrom S4Vectors endoapply
 #' @export
 #' @examples
 #'## Get an example file 
-#'exampleFolder <- system.file("extdata", "example_bams", package="strandseqExampleData")
+#'exampleFolder <- system.file("extdata", "example_results", package="breakpointRdata")
 #'exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
 #'## Load the file 
-#'fragments <- readBamFileAsGRanges(exampleFile, pairedEndReads=FALSE)
-#'## Calculate deltaW values
-#'dw <- deltaWCalculator(fragments)
-#'## Get significant peaks in deltaW values
-#'breaks <- breakSeekr(dw)
+#'breakpoint.objects <- get(load(exampleFile))
 #'## Genotype regions between breakpoints
-#'gbreaks <- GenotypeBreaks(breaks, fragments)
+#'gbreaks <- GenotypeBreaks(breakpoint.objects$breaks, breakpoint.objects$fragments)
 #'
-GenotypeBreaks <- function(breaks, fragments, background=0.05, minReads=10)
-{
+GenotypeBreaks <- function(breaks, fragments, background=0.05, minReads=10) {
     if (length(breaks)==0) {
         stop("argument 'breaks' is empty")
     }
@@ -50,7 +46,8 @@ GenotypeBreaks <- function(breaks, fragments, background=0.05, minReads=10)
         breakrange$readNo <- breakrange$Ws + breakrange$Cs
         
         ## bestFit genotype each region by Fisher Exact test
-        fisher <- sapply(1:length(breakrange), function(x) genotype.fisher(cReads=breakrange$Cs[x], wReads=breakrange$Ws[x], roiReads=breakrange$readNo[x], background=background, minReads=minReads))
+        fisher <- lapply(1:length(breakrange), function(x) genotype.fisher(cReads=breakrange$Cs[x], wReads=breakrange$Ws[x], roiReads=breakrange$readNo[x], background=background, minReads=minReads))
+        fisher <- do.call(cbind, fisher)
       
         breakrange$genoT <- unlist(fisher[1,])
         breakrange$pVal <- unlist(fisher[2,])
@@ -81,7 +78,6 @@ GenotypeBreaks <- function(breaks, fragments, background=0.05, minReads=10)
     } else {
         return(breakrange.new<-NULL)
     }  
-    
 }
 
 

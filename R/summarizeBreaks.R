@@ -1,18 +1,17 @@
 #' Compile breakpoint summary table
 #'
-#' This function will calculate deltaWs from a \code{\link[GenomicRanges]{GRanges}} object with read fragments.
+#' This function will calculate deltaWs from a \code{\link{GRanges-class}} object with read fragments.
 #'
-#' @param breakpoints A list containing breakpoints stored in \code{\link[GenomicRanges]{GRanges}} object.
+#' @param breakpoints A list containing breakpoints stored in \code{\link{GRanges-class}} object.
 #' @return A \code{data.frame} of compiled breakpoints together with confidence intervals.
 #' @author David Porubsky
 #' @export
 #' @examples 
 #'## Get some files that you want to load
-#'exampleFolder <- system.file("extdata", "example_results", package="strandseqExampleData")
+#'exampleFolder <- system.file("extdata", "example_results", package="breakpointRdata")
 #'file <- list.files(exampleFolder, full.names=TRUE)[1]
-#'breakpoints <- get(load(file))[c('breaks', 'confint')] 
+#'breakpoints <- get(load(file))[c('breaks', 'confint')]
 #'summarizeBreaks(breakpoints)
-#' 
 
 summarizeBreaks <- function(breakpoints) {
     breaks <- breakpoints$breaks

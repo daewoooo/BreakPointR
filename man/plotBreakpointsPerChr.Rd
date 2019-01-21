@@ -21,7 +21,7 @@ This function will create chromsome specific enome-wide ideograms from a \code{\
 }
 \examples{
 ## Get an example file
-exampleFolder <- system.file("extdata", "example_results", package="strandseqExampleData")
+exampleFolder <- system.file("extdata", "example_results", package="breakpointRdata")
 exampleFiles <- list.files(exampleFolder, full.names=TRUE)
 ## Plot results
 plotBreakpointsPerChr(exampleFiles, chromosomes='chr7')

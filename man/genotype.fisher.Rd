@@ -4,7 +4,8 @@
 \alias{genotype.fisher}
 \title{Genotype read numbers}
 \usage{
-genotype.fisher(cReads, wReads, roiReads, background = 0.02, minReads = 10)
+genotype.fisher(cReads, wReads, roiReads, background = 0.02,
+  minReads = 10)
 }
 \arguments{
 \item{cReads}{Number of Crick reads.}

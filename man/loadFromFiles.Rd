@@ -7,21 +7,20 @@
 loadFromFiles(files, check.class = c("GRanges", "BreakPoint"))
 }
 \arguments{
-\item{files}{A list of \code{\link[GenomicRanges]{GRanges}} or \code{\link{BreakPoint}} objects or a vector of files that contain such objects.}
+\item{files}{A list of \code{\link{GRanges-class}} or \code{\link{BreakPoint}} objects or a vector of files that contain such objects.}
 
 \item{check.class}{Any combination of \code{c('GRanges', 'BreakPoint')}. If any of the loaded objects does not belong to the specified class, an error is thrown.}
 }
 \value{
-A list of \code{\link[GenomicRanges]{GRanges}} or \code{\link{BreakPoint}} objects.
+A list of \code{\link{GRanges-class}} or \code{\link{BreakPoint}} objects.
 }
 \description{
 Wrapper to load \pkg{\link{breakpointR}} objects from file and check the class of the loaded objects.
 }
 \examples{
 ## Get some files that you want to load
-exampleFolder <- system.file("extdata", "example_results", package="strandseqExampleData")
+exampleFolder <- system.file("extdata", "example_results", package="breakpointRdata")
 exampleFiles <- list.files(exampleFolder, full.names=TRUE)
 ## Load the processed data                          
 breakpoint.objects <- loadFromFiles(exampleFiles)
-
 }

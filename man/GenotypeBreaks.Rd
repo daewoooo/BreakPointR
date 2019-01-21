@@ -7,32 +7,28 @@
 GenotypeBreaks(breaks, fragments, background = 0.05, minReads = 10)
 }
 \arguments{
-\item{breaks}{A \code{\link[GenomicRanges]{GRanges}} object with breakpoint coordinates.}
+\item{breaks}{A \code{\link{GRanges-class}} object with breakpoint coordinates.}
 
-\item{fragments}{A \code{\link[GenomicRanges]{GRanges}} object with read fragments.}
+\item{fragments}{A \code{\link{GRanges-class}} object with read fragments.}
 
 \item{background}{The percent (e.g. 0.05 = 5\%) of background reads allowed for WW or CC genotype calls.}
 
 \item{minReads}{The minimal number of reads between two breaks required for genotyping.}
 }
 \value{
-A \code{\link[GenomicRanges]{GRanges}} object with genotyped breakpoint coordinates.
+A \code{\link{GRanges-class}} object with genotyped breakpoint coordinates.
 }
 \description{
 Genotype the space between breakpoints with Fisher's exact test.
 }
 \examples{
 ## Get an example file 
-exampleFolder <- system.file("extdata", "example_bams", package="strandseqExampleData")
+exampleFolder <- system.file("extdata", "example_results", package="breakpointRdata")
 exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
 ## Load the file 
-fragments <- readBamFileAsGRanges(exampleFile, pairedEndReads=FALSE)
-## Calculate deltaW values
-dw <- deltaWCalculator(fragments)
-## Get significant peaks in deltaW values
-breaks <- breakSeekr(dw)
+breakpoint.objects <- get(load(exampleFile))
 ## Genotype regions between breakpoints
-gbreaks <- GenotypeBreaks(breaks, fragments)
+gbreaks <- GenotypeBreaks(breakpoint.objects$breaks, breakpoint.objects$fragments)
 
 }
 \author{

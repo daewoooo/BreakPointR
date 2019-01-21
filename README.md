@@ -3,7 +3,7 @@
 
 An R-package for breakpoint detection in single cell Strand-seq data.
 
-Collaborators: David Porubsky, Ashley D Sanders, Aaron Taudt
+Collaborators: David Porubsky, Ashley D. Sanders, Aaron Taudt
 
 Installation
 ------------
@@ -23,18 +23,23 @@ To install the development version from Github, follow the steps given below. Th
 	 biocLite("GenomicRanges")  
 	 biocLite("GenomicAlignments")  
 	 library(devtools)  
-	 install_github("daewoooo/strandseqExampleData")  
-	 install_github("daewoooo/BreakPointR")  
+	 install_github("daewoooo/breakpointRdata")  
+	 install_github("daewoooo/breakpointR")  
 	 #### Or alternatively if the above line doesn't work:  
-	 install_git("git://github.com/daewoooo/strandseqExampleData.git", branch = "master")  
-	 install_git("git://github.com/daewoooo/BreakPointR.git", branch = "master")  
+	 install_git("git://github.com/daewoooo/breakpointRdata.git", branch = "master")  
+	 install_git("git://github.com/daewoooo/breakpointR.git", branch = "master")  
 
-How to use BreakPointR
+How to use breakpointR
 ----------------------
 
-Please refert to the [vignette](https://github.com/daewoooo/BreakPointR/blob/devel/vignettes/breakpointR-knitr.pdf) for tutorials on all breakpointR features.
+Please refert to the [vignette](https://github.com/daewoooo/breakpointR/blob/master/vignettes/breakpointR-knitr.pdf) for tutorials on all breakpointR features.
 
 Report Errors
 -------------
 
-If you encounter errors of any kind, please report an [issue here](https://github.com/daewoooo/BreakPointR/issues/new).
+If you encounter errors of any kind, please report an [issue here](https://github.com/daewoooo/breakpointR/issues/new).
+
+NOTE
+----
+
+The breakpointR package is currently under development and contains unpublished work. Any usage for publishing is strictly prohibited without permission.

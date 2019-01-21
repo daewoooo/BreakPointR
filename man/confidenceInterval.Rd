@@ -16,25 +16,20 @@ confidenceInterval(breaks, fragments, background = 0.05, conf = 0.99)
 \item{conf}{Desired confidence interval of localized breakpoints.}
 }
 \value{
-A \code{\link[GenomicRanges]{GRanges}} object of breakpoint ranges for a given confidence interval in \code{conf}.
+A \code{\link{GRanges-class}} object of breakpoint ranges for a given confidence interval in \code{conf}.
 }
 \description{
 Estimate confidence intervals for breakpoints by going outwards from the breakpoint read by read, and multiplying the probability that the read doesn't belong to the assigned segment.
 }
 \examples{
-## Get an example file  
-exampleFolder <- system.file("extdata", "example_bams", package="strandseqExampleData")
+\dontrun{ 
+## Get an example file 
+exampleFolder <- system.file("extdata", "example_results", package="breakpointRdata")
 exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
-## Load the file
-fragments <- readBamFileAsGRanges(exampleFile, pairedEndReads=FALSE)
-## Calculate deltaW values
-dw <- deltaWCalculator(fragments)
-## Get significant peaks in deltaW values
-breaks <- breakSeekr(dw)
-## Genotype regions between breakpoints
-gbreaks <- GenotypeBreaks(breaks, fragments)
+## Load the file 
+breakpoint.objects <- get(load(exampleFile))
 ## Calculate confidence intervals of genotyped breakpoints
-confint <- confidenceInterval(gbreaks, fragments, background=0.02)
+confint <- confidenceInterval(breakpoint.objects$breaks, breakpoint.objects$fragments, background=0.02)}
 
 }
 \author{

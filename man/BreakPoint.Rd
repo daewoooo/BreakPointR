@@ -4,10 +4,10 @@
 \alias{BreakPoint}
 \title{BreakPoint object}
 \value{
-\item{fragments}{A \code{\link[GenomicRanges]{GRanges}} object with read fragments.}
-\item{deltas}{A \code{\link[GenomicRanges]{GRanges}} object with deltaWs.}
-\item{breaks}{A \code{\link[GenomicRanges]{GRanges}} object containing the breakpoint coordinates.}
-\item{counts}{A \code{\link[GenomicRanges]{GRanges}} object with the regions between breakpoints.}
+\item{fragments}{A \code{\link{GRanges-class}} object with read fragments.}
+\item{deltas}{A \code{\link{GRanges-class}} object with deltaWs.}
+\item{breaks}{A \code{\link{GRanges-class}} object containing the breakpoint coordinates.}
+\item{counts}{A \code{\link{GRanges-class}} object with the regions between breakpoints.}
 \item{params}{A vector with parameters that were used to obtain the results.}
 }
 \description{

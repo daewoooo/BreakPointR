@@ -5,8 +5,8 @@
 \title{Import BAM file into GRanges}
 \usage{
 readBamFileAsGRanges(file, bamindex = file, chromosomes = NULL,
-  pairedEndReads = FALSE, min.mapq = 10, remove.duplicate.reads = TRUE,
-  pair2frgm = FALSE, filtAlt = FALSE)
+  pairedEndReads = FALSE, min.mapq = 10,
+  remove.duplicate.reads = TRUE, pair2frgm = FALSE, filtAlt = FALSE)
 }
 \arguments{
 \item{file}{Bamfile with aligned reads.}
@@ -26,18 +26,17 @@ readBamFileAsGRanges(file, bamindex = file, chromosomes = NULL,
 \item{filtAlt}{Set to \code{TRUE} if you want to filter out alternative alignments defined in 'XA' tag.}
 }
 \value{
-A \code{\link[GenomicRanges]{GRanges}} object.
+A \code{\link{GRanges-class}} object.
 }
 \description{
-Import aligned reads from a BAM file into a \code{\link[GenomicRanges]{GRanges}} object.
+Import aligned reads from a BAM file into a \code{\link{GRanges-class}} object.
 }
 \examples{
 ## Get an example file 
-exampleFolder <- system.file("extdata", "example_bams", package="strandseqExampleData")
+exampleFolder <- system.file("extdata", "example_bams", package="breakpointRdata")
 exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
 ## Load the file
-gr <- readBamFileAsGRanges(exampleFile, pairedEndReads=FALSE)
-
+fragments <- readBamFileAsGRanges(exampleFile, pairedEndReads=FALSE, chromosomes='chr22')
 }
 \author{
 David Porubsky, Aaron Taudt, Ashley Sanders

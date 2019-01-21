@@ -9,7 +9,6 @@
 #' @param reuse.existing.files A logical indicating whether or not existing files in \code{outputfolder} should be reused.
 #' @param callHotSpots Search for regions of high abundance of breakpoints in single cells.
 
-#' @inheritParams readBamFileAsGRanges
 #' @inheritParams runBreakpointr
 #' @inheritParams readBamFileAsGRanges
 #' @inheritParams createCompositeFile
@@ -23,11 +22,9 @@
 #' @export
 #' 
 #' @examples
-#'## Get some example files
-#'inputfolder <- system.file("extdata", "example_bams", package="strandseqExampleData")
-#'outputfolder <- file.path(tempdir(), "breakpointr_example")
-#'## Run breakpointr
-#'breakpointr(inputfolder, outputfolder, chromosomes='chr22', pairedEndReads=FALSE)
+#'\dontrun{
+#'## The following call produces plots and genome browser files for all BAM files in "my-data-folder"
+#'breakpointr(inputfolder="my-data-folder", outputfolder="my-output-folder")}
 #'
 breakpointr <- function(inputfolder, outputfolder, configfile=NULL, numCPU=1, reuse.existing.files=FALSE, windowsize=1e6, binMethod="size", pairedEndReads=FALSE, pair2frgm=FALSE, chromosomes=NULL, min.mapq=10, filtAlt=FALSE, trim=10, peakTh=0.33, zlim=3.291, background=0.05, minReads=10, maskRegions=NULL, callHotSpots=FALSE, conf=0.99) {
 
@@ -85,6 +82,11 @@ if (config[['createCompositeFile']] & config[['callHotSpots']]) {
     message("If createCompositeFile=TRUE breakpoint hotspots can't be called\nSetting callHotSpots to FALSE!!!")
     config[['callHotSpots']] <- FALSE
 }
+
+if (config[['binMethod']] == 'multi') {
+    message("NOTE: binMethod = 'multi' works only for windowsizes defined by the number of reads!!!")  
+}
+
     
 ## Helpers
 windowsize <- config[['windowsize']]
@@ -225,7 +227,8 @@ if (createCompositeFile) {
 
 ## Write masked regions to BED file
 if (!is.null(maskRegions)) {
-    writeBedFile(index='MaskedRegions', outputDirectory=browserpath, maskedRegions=maskRegions)
+    exportUCSC(gr=maskRegions, index='MaskedRegions', outputDirectory=browserpath, colorRGB='0,0,0')
+    #writeBedFile(index='MaskedRegions', outputDirectory=browserpath, maskedRegions=maskRegions)
 }
 
 ## Compile all breaks using disjoin function
@@ -285,7 +288,8 @@ write.table(summaryBreaks.df, file = file.path(breakspath, 'breakPointSummary.tx
 if (callHotSpots) {
     hotspots <- hotspotter(gr.list=breaks.all.files, bw = 1000000, pval = 1e-10)
     if (length(hotspots)) {
-        writeBedFile(index='HotSpots', outputDirectory=breakspath, hotspots=hotspots)
+        exportUCSC(gr=hotspots, index='HotSpots', outputDirectory=breakspath, colorRGB='0,0,255')
+        #writeBedFile(index='HotSpots', outputDirectory=breakspath, hotspots=hotspots)
     }
 }
 
@@ -301,4 +305,4 @@ if (createCompositeFile==FALSE) {
     }  
 }  
 
-}
+} #end of wrapper function

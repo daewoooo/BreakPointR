@@ -5,11 +5,11 @@
 \title{Main function for the \pkg{\link{breakpointR}} package}
 \usage{
 breakpointr(inputfolder, outputfolder, configfile = NULL, numCPU = 1,
-  reuse.existing.files = FALSE, windowsize = 1e+06, binMethod = "size",
-  pairedEndReads = FALSE, pair2frgm = FALSE, chromosomes = NULL,
-  min.mapq = 10, filtAlt = FALSE, trim = 10, peakTh = 0.33,
-  zlim = 3.291, background = 0.05, minReads = 10, maskRegions = NULL,
-  callHotSpots = FALSE, conf = 0.99)
+  reuse.existing.files = FALSE, windowsize = 1e+06,
+  binMethod = "size", pairedEndReads = FALSE, pair2frgm = FALSE,
+  chromosomes = NULL, min.mapq = 10, filtAlt = FALSE, trim = 10,
+  peakTh = 0.33, zlim = 3.291, background = 0.05, minReads = 10,
+  maskRegions = NULL, callHotSpots = FALSE, conf = 0.99)
 }
 \arguments{
 \item{inputfolder}{Folder with BAM files.}
@@ -59,11 +59,9 @@ breakpointr(inputfolder, outputfolder, configfile = NULL, numCPU = 1,
 This function is an easy-to-use wrapper to find breakpoints with \code{\link[breakpointR]{runBreakpointr}} in parallel, write the results to file, plot results and find hotspots.
 }
 \examples{
-## Get some example files
-inputfolder <- system.file("extdata", "example_bams", package="strandseqExampleData")
-outputfolder <- file.path(tempdir(), "breakpointr_example")
-## Run breakpointr
-breakpointr(inputfolder, outputfolder, chromosomes='chr22', pairedEndReads=FALSE)
+\dontrun{
+## The following call produces plots and genome browser files for all BAM files in "my-data-folder"
+breakpointr(inputfolder="my-data-folder", outputfolder="my-output-folder")}
 
 }
 \author{

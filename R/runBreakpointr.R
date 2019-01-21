@@ -25,22 +25,27 @@
 #' @importFrom utils flush.console
 #' @importFrom S4Vectors subjectHits
 #' @export
-#' @examples 
+#' @examples
+#'\dontrun{ 
 #'## Get an example file
-#'exampleFolder <- system.file("extdata", "example_bams", package="strandseqExampleData")
+#'exampleFolder <- system.file("extdata", "example_bams", package="breakpointRdata")
 #'exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
 #'## Run breakpointR
-#'brkpts <- runBreakpointr(exampleFile, chromosomes='chr22', pairedEndReads=FALSE)
+#'brkpts <- runBreakpointr(exampleFile, chromosomes='chr22', pairedEndReads=FALSE)}
 #'
 runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, chromosomes=NULL, windowsize=1e6, binMethod="size", trim=10, peakTh=0.33, zlim=3.291, background=0.05, min.mapq=10, pair2frgm=FALSE, filtAlt=FALSE, minReads=20, maskRegions=NULL, conf=0.99) {
 
     ## check the class of the bamfile, make GRanges object of file
-    if ( class(bamfile) != "GRanges" ) {
+    if (!is(bamfile, 'GRanges')) {  
         ptm <- startTimedMessage("Reading file ", bamfile, " ...")
         suppressWarnings( fragments <- readBamFileAsGRanges(bamfile, pairedEndReads=pairedEndReads, chromosomes=chromosomes, min.mapq=min.mapq, pair2frgm=pair2frgm, filtAlt=filtAlt) )
         stopTimedMessage(ptm)
     } else {
-        fragments <- bamfile
+        if (!is.null(chromosomes)) {
+            fragments <- GenomeInfoDb::keepSeqlevels(bamfile, chromosomes, pruning.mode='coarse')
+        } else {
+            fragments <- bamfile
+        }    
         bamfile <- 'CompositeFile'
     }
   
@@ -83,13 +88,23 @@ runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, c
             counts <- GenomicRanges::countOverlaps(tiles, fragments.chr)
             reads.per.window <- max(10, round(mean(counts[counts>0], trim=0.05)))
           
-            dw <- deltaWCalculator(fragments.chr, reads.per.window=reads.per.window)
+            dw <- deltaWCalculator(frags=fragments.chr, reads.per.window=reads.per.window)
         } else if (binMethod == "reads") {
             ## normalize only for size of the chromosome 1
             #reads.per.window <- max(10, round(windowsize/(seqlengths(fragments)[1]/seqlengths(fragments)[chr]))) # scales the bin to chr size, anchored to chr1 (249250621 bp)
             ## do not normalize to the size of the chromosome 1
             reads.per.window <- windowsize 
-            dw <- deltaWCalculator(fragments.chr, reads.per.window=reads.per.window)
+            dw <- deltaWCalculator(frags=fragments.chr, reads.per.window=reads.per.window)
+        } else if (binMethod == "multi") {
+            ## Set the starting windowsize to be the minimal required number of reads in any given region  
+            #reads.per.window <- minReads
+            #reads.per.window <- windowsize #number of reads per bin has to be set!!!
+          
+            tiles <- unlist(GenomicRanges::tileGenome(seqlengths(fragments)[chr], tilewidth = windowsize))
+            counts <- GenomicRanges::countOverlaps(tiles, fragments.chr)
+            reads.per.window <- max(10, round(mean(counts[counts>0], trim=0.05)))
+            
+            dw <- deltaWCalculatorVariousWindows(frags=fragments.chr, reads.per.window=reads.per.window, sizes=c(2,4,8,16,36))        
         }
         deltaWs <- dw[seqnames(dw)==chr]
         stopTimedMessage(ptm)
@@ -104,7 +119,7 @@ runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, c
             iter <- 1
             ptm <- startTimedMessage("    genotyping ",iter, " ...")
             utils::flush.console()
-            newBreaks <- GenotypeBreaks(breaks, fragments, background=background, minReads=minReads)
+            newBreaks <- GenotypeBreaks(breaks=breaks, fragments=fragments, background=background, minReads=minReads)
             prev.breaks <- breaks  
             breaks <- newBreaks
             stopTimedMessage(ptm)
@@ -113,7 +128,7 @@ runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, c
                 utils::flush.console()
                 iter <- iter + 1
                 ptm <- startTimedMessage("    genotyping ",iter, " ...")
-                newBreaks <- GenotypeBreaks(breaks, fragments, background=background, minReads=minReads)
+                newBreaks <- GenotypeBreaks(breaks=breaks, fragments=fragments, background=background, minReads=minReads)
                 prev.breaks <- breaks  
                 breaks <- newBreaks
                 stopTimedMessage(ptm)
@@ -174,6 +189,14 @@ runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, c
             counts <- cbind(Ws,Cs)
             mcols(breakrange) <- counts
             breakrange$states <- states
+            
+            ## Estimate CN in ranges between the breakpoints (only for cumulative coverage of all cells)
+            if (bamfile == 'CompositeFile') {
+                ptm <- startTimedMessage("    estimating CN in localized regions ...")
+                breakrange <- estimateCN(frags=fragments.chr, regions=breakrange)
+                stopTimedMessage(ptm) 
+            }    
+            
             suppressWarnings( counts.all.chroms[[chr]] <- breakrange )
             
             ## Confidence intervals
@@ -202,7 +225,6 @@ runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, c
     }
     
     ## creating list of list where filename is first level list ID and deltas, breaks and counts are second list IDs
-    reads.all.chroms <- unlist(reads.all.chroms, use.names=FALSE)  
     deltas.all.chroms <- unlist(deltas.all.chroms, use.names=FALSE)
     breaks.all.chroms <- unlist(breaks.all.chroms, use.names=FALSE)
     confint.all.chroms <- unlist(confint.all.chroms, use.names=FALSE)

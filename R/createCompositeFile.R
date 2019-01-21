@@ -8,18 +8,11 @@
 #' @inheritParams readBamFileAsGRanges
 #' @param WC.cutoff Percentage of WW or CC reads to consider chromosome being WW or CC
 #' @param background The amount of background introduced into the genotype test.
-#' @return A \code{\link[GenomicRanges]{GRanges}} object.
+#' @return A \code{\link{GRanges-class}} object.
 #' @importFrom gtools mixedsort
 #' @importFrom BiocGenerics table
 #' @import GenomicRanges
 #' @author Ashley Sanders, David Porubsky
-#' @export
-#' @examples
-#'## Get some example files
-#'inputfolder <- system.file("extdata", "example_bams", package="strandseqExampleData")
-#'files <- list.files(inputfolder, full.names=TRUE, pattern="bam$")
-#'## Create the composite file
-#'composite <- createCompositeFile(files, chromosomes='chr22', pairedEndReads=FALSE)
 #'                    
 createCompositeFile <- function(file.list, chromosomes=NULL, pairedEndReads=TRUE, pair2frgm=FALSE, min.mapq=10, filtAlt=FALSE, WC.cutoff=0.90, background=0.05) {
 

@@ -1,0 +1,5 @@
+INITIAL BIOCONDUCTOR VERSION 1.0.0
+----------------------------------
+
+This package implements various functions to find 
+template strand changepoints in Strand-seq data.

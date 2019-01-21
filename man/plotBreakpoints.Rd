@@ -19,7 +19,7 @@ This function will create genome-wide ideograms from a \code{\link{BreakPoint}} 
 }
 \examples{
 ## Get an example file
-exampleFolder <- system.file("extdata", "example_results", package="strandseqExampleData")
+exampleFolder <- system.file("extdata", "example_results", package="breakpointRdata")
 exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
 ## Plot the file
 plotBreakpoints(exampleFile)

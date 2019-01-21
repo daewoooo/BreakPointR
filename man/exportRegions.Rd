@@ -28,7 +28,7 @@ Function to print WC regions after breakpointR analysis
 }
 \examples{
 ## Get an example file
-exampleFolder <- system.file("extdata", "example_results", package="strandseqExampleData")
+exampleFolder <- system.file("extdata", "example_results", package="breakpointRdata")
 ## To export regions genotyped as 'wc'
 wc.regions <- exportRegions(datapath=exampleFolder, collapseInversions=FALSE, minRegionSize=5000000, state='wc') 
 }

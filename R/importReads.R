@@ -1,6 +1,6 @@
 #' Import BAM file into GRanges
 #'
-#' Import aligned reads from a BAM file into a \code{\link[GenomicRanges]{GRanges}} object.
+#' Import aligned reads from a BAM file into a \code{\link{GRanges-class}} object.
 #'
 #' @param file Bamfile with aligned reads.
 #' @param bamindex Bam-index file with or without the .bai ending. If this file does not exist it will be created and a warning is issued.
@@ -10,18 +10,18 @@
 #' @param remove.duplicate.reads A logical indicating whether or not duplicate reads should be kept.
 #' @param pair2frgm Set to \code{TRUE} if every paired-end read should be merged into a single fragment.
 #' @param filtAlt Set to \code{TRUE} if you want to filter out alternative alignments defined in 'XA' tag.
-#' @return A \code{\link[GenomicRanges]{GRanges}} object.
+#' @return A \code{\link{GRanges-class}} object.
 #' @importFrom Rsamtools indexBam scanBamHeader ScanBamParam scanBamFlag
 #' @importFrom GenomicAlignments readGAlignmentPairs readGAlignments first last
 #' @author David Porubsky, Aaron Taudt, Ashley Sanders
 #' @export
 #' @examples
 #'## Get an example file 
-#'exampleFolder <- system.file("extdata", "example_bams", package="strandseqExampleData")
+#'exampleFolder <- system.file("extdata", "example_bams", package="breakpointRdata")
 #'exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
 #'## Load the file
-#'gr <- readBamFileAsGRanges(exampleFile, pairedEndReads=FALSE)
-#'
+#'fragments <- readBamFileAsGRanges(exampleFile, pairedEndReads=FALSE, chromosomes='chr22')
+
 readBamFileAsGRanges <- function(file, bamindex=file, chromosomes=NULL, pairedEndReads=FALSE, min.mapq=10, remove.duplicate.reads=TRUE, pair2frgm=FALSE, filtAlt=FALSE) {
 
     ## Check if bamindex exists

@@ -4,35 +4,22 @@
 #'
 #' The hotspotter uses \code{\link[stats]{density}} to perform a KDE. A p-value is calculated by comparing the density profile of the genomic events with the density profile of a randomly subsampled set of genomic events. Due to this random sampling, the result can vary for each function call, most likely for hotspots whose p-value is close to the specified \code{pval}.
 #' 
-#' @param gr.list A list or \code{\link[GenomicRanges]{GRangesList}} with \code{\link[GenomicRanges]{GRanges}} object containing the coordinates of the genomic events.
+#' @param gr.list A list or \code{\link{GRangesList-class}} with \code{\link{GRanges-class}} object containing the coordinates of the genomic events.
 #' @param bw Bandwidth used for kernel density estimation (see \code{\link[stats]{density}}).
 #' @param pval P-value cutoff for hotspots.
-#' @return A \code{\link[GenomicRanges]{GRanges}} object containing coordinates of hotspots with p-values.
-#' @author Aaron Taudt
+#' @return A \code{\link{GRanges-class}} object containing coordinates of hotspots with p-values.
 #' @importFrom stats density runif ecdf
-#' @export
-#' @examples 
-#'## Get example BreakPoint objects
-#'data(example_BreakPoints)
-#'## Extract breakpoint coordinates
-#'breaks <- lapply(example_BreakPoints, '[[', 'breaks')
-#'## Get hotspot coordinates
-#'hotspots <- hotspotter(breaks, bw=1e6)
+#' @importFrom S4Vectors endoapply
+#' @author Aaron Taudt
 #'
 hotspotter <- function(gr.list, bw, pval=1e-8) {
 
     ptm <- startTimedMessage("Searching for breakpoint hotspots ...")
-    set.seed(0) # fix seed for random permutations of bootstrapping
+    #set.seed(0) # fix seed for random permutations of bootstrapping
   
     ## Coerce into one GRanges
     names(gr.list) <- NULL
-    if (class(gr.list) == 'list') {
-        gr <- do.call(c, gr.list)
-    } else if (class(gr.list) == 'GRangesList') {
-        gr <- unlist(gr.list)
-    } else {
-        stop("Only a list of Granges or a GRangesList allowed for hotspot calling!!!")
-    } 
+    gr <- do.call(c, gr.list)
     gr <- GenomicRanges::sort(gr)
   
     ## Iterate over chromosomes and calculate p-values

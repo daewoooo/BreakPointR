@@ -5,7 +5,7 @@
 #' @import IRanges
 #' @import GenomeInfoDb
 #' @import GenomicRanges
-#' @import strandseqExampleData
+#' @import breakpointRdata
 #' @importFrom methods as is
 NULL
 

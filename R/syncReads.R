@@ -4,15 +4,16 @@
 #' 
 #' @param files2sync A list of files that contains \code{\link{BreakPoint}} objects.
 #' @param collapseWidth A segment size to be collapsed with neighbouring segments.
-#' @return A \code{\link[GenomicRanges]{GRanges}} object that reads synchronized by directionality.
+#' @return A \code{\link{GRanges-class}} object that reads synchronized by directionality.
+#' @importFrom S4Vectors endoapply
 #' @author David Porubsky
 #' @export
-#' @examples 
-#'## Get some files that you want to load
-#'exampleFolder <- system.file("extdata", "example_results", package="strandseqExampleData")
-#'files2sync <- list.files(exampleFolder, full.names=TRUE)
-#'synchronizeReadDir(files2sync)
+#' @examples
 #'
+#'## Get some files that you want to load
+#'exampleFolder <- system.file("extdata", "example_results", package="breakpointRdata")
+#'files2sync <- list.files(exampleFolder, full.names=TRUE)[1]
+#'synchronizeReadDir(files2sync)
 
 synchronizeReadDir <- function(files2sync, collapseWidth=5000000) {
   

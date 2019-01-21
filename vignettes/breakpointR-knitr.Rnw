@@ -113,7 +113,7 @@ Breakpoint detection is based on finding significant peaks in deltaW values. Lev
 <<eval=TRUE, warning=FALSE, message=FALSE>>=
 ## Example deltaW values
 exampleFolder <- system.file("extdata", "example_results",
-                             package="strandseqExampleData")
+                             package="breakpointRdata")
 exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
 breakpoint.object <- loadFromFiles(exampleFile)
 head(breakpoint.object[[1]]$deltas)
@@ -136,7 +136,7 @@ breakpointr(..., callHotSpots=TRUE)
 <<eval=TRUE, warning=FALSE, message=FALSE, fig.width=12, fig.height=4>>==
 ## Plotting a single library
 exampleFolder <- system.file("extdata", "example_results",
-                             package="strandseqExampleData")
+                             package="breakpointRdata")
 exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
 plotBreakpoints(exampleFile)
 @
@@ -144,7 +144,7 @@ plotBreakpoints(exampleFile)
 <<eval=TRUE, warning=FALSE, message=FALSE, fig.width=12, fig.height=5>>==
 ## Plotting a single library
 exampleFolder <- system.file("extdata", "example_results",
-                             package="strandseqExampleData")
+                             package="breakpointRdata")
 exampleFiles <- list.files(exampleFolder, full.names=TRUE)[1:4]
 plotBreakpointsPerChr(exampleFiles, chromosomes = 'chr7')
 @
