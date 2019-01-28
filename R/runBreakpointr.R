@@ -104,7 +104,7 @@ runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, c
             counts <- GenomicRanges::countOverlaps(tiles, fragments.chr)
             reads.per.window <- max(10, round(mean(counts[counts>0], trim=0.05)))
             
-            dw <- deltaWCalculatorVariousWindows(frags=fragments.chr, reads.per.window=reads.per.window, sizes=c(2,4,8,16,36))        
+            dw <- deltaWCalculatorVariousWindows(frags=fragments.chr, reads.per.window=reads.per.window, sizes=c(2,4,8,16,32))        
         }
         deltaWs <- dw[seqnames(dw)==chr]
         stopTimedMessage(ptm)
