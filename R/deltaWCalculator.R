@@ -88,16 +88,25 @@ deltaWCalculatorVariousWindows <- function(frags, reads.per.window=100, sizes=c(
   dw <- deltaWCalculator(frags=frags, reads.per.window=reads.per.window)
   dw.per.size[[1]] <- dw$deltaW
   for (i in seq_along(sizes)) {
-    ## Calculate deltaW for a user defined window
-    dw <- deltaWCalculator(frags=frags, reads.per.window=reads.per.window * sizes[i])
-    ## Normalize calculated deltaW for a given window by the original window size
-    dw.per.size[[i+1]] <- dw$deltaW / sizes[i]
+    reads.per.window.rescaled <- reads.per.window * sizes[i]
+    ## Make sure that the rescaled number of reads per window is not more than 5% of all available fragments
+    if (reads.per.window.rescaled <= (length(frags) * 0.05)) {
+      ## Calculate deltaW for a user defined window
+      dw <- deltaWCalculator(frags=frags, reads.per.window=reads.per.window * sizes[i])
+      ## Normalize calculated deltaW for a given window by the original window size
+      dw.per.size[[length(dw.per.size) + 1]] <- dw$deltaW / sizes[i]
+    }  
   }
   
-  ## Take max deltaW across all windows for any given window boundary
-  dw.per.size.matrix <- do.call(cbind, dw.per.size)
-  #max.deltaW <- apply(dw.per.size.matrix, 1, max)
-  max.deltaW <- apply(dw.per.size.matrix, 1, mean) #[EXPERIMENTAL]
+  if (length(dw.per.size) > 1) {
+    dw.per.size.matrix <- do.call(cbind, dw.per.size)
+    ## Take max deltaW across all windows for any given window boundary
+    #max.deltaW <- apply(dw.per.size.matrix, 1, max) #[EXPERIMENTAL]
+    ## Take mean deltaW across all windows for any given window boundary
+    max.deltaW <- apply(dw.per.size.matrix, 1, mean) #[EXPERIMENTAL]
+  } else {
+    max.deltaW <- unlist(dw.per.size)
+  }  
   
   dw$deltaW <- max.deltaW
   return(dw)

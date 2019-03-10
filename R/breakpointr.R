@@ -84,7 +84,7 @@ if (config[['createCompositeFile']] & config[['callHotSpots']]) {
 }
 
 if (config[['binMethod']] == 'multi') {
-    message("NOTE: binMethod = 'multi' works only for windowsizes defined by the number of reads!!!")  
+    message("NOTE: binMethod = 'multi' works only for windowsizes defined by the genomic size!!!")  
 }
 
     

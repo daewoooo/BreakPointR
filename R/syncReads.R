@@ -42,6 +42,27 @@ synchronizeReadDir <- function(files2sync, collapseWidth=5000000) {
         return(collapsed.gr)
     }
     
+    #take only one WW or CC region from double SCE chromosome
+    removeDoubleSCEs <- function(gr) {
+      if (any(gr$states == 'wc')) {
+        wc.idx <- which(gr$states == 'wc')
+        if (any(wc.idx > 1) & any(wc.idx < length(gr))) {
+          ## Remove wc regions
+          gr.new <- gr[-wc.idx ]
+          ## Take strand state covering largest region
+          gr.new.byState <- split(gr.new, gr.new$states)
+          state.widths <- lapply(gr.new.byState, function(x) sum(width(x)))
+          gr.new <- gr.new[gr.new$states == names(which.max(state.widths))]
+          #gr.new <- gr.new[which.max(width(gr.new))]
+          return(gr.new)
+        } else {
+          return(gr[-wc.idx ])
+        }
+      } else {
+        return(gr)
+      }
+    }
+    
     ptm <- startTimedMessage("Synchronizing read directionality ...")
 
     ## load data of class BreakPoint
@@ -51,6 +72,7 @@ synchronizeReadDir <- function(files2sync, collapseWidth=5000000) {
     for (i in 1:length(data)) {
         lib.results <- data[[i]]
         region.counts <- lib.results$counts
+        
         ## collapse regions smaller collapseWidth
         #get index of each region smaller than collapseWidth
         indexes <- which(width(region.counts) < collapseWidth)
@@ -66,17 +88,22 @@ synchronizeReadDir <- function(files2sync, collapseWidth=5000000) {
             }
         }
         
-        WWandCC.regions <- region.counts[region.counts$states != 'wc']
-        WWandCC.regions.grl <- GenomicRanges::split(WWandCC.regions, seqnames(WWandCC.regions))
+        ## For WW and CC regions separated by WC region take only the larger one [TESTING]
+        regions.per.chr <- split(region.counts, as.character(seqnames(region.counts)))
+        WWandCC.regions.grl <- endoapply(regions.per.chr, removeDoubleSCEs)
+        #WWandCC.regions <- region.counts[region.counts$states != 'wc']
+        #WWandCC.regions.grl <- GenomicRanges::split(WWandCC.regions, seqnames(WWandCC.regions))
         WWandCC.regions.collapsed <- endoapply(WWandCC.regions.grl, collapseBins)
         WWandCC.regions.collapsed <- unlist(WWandCC.regions.collapsed, use.names=FALSE)
+        
         ## get fraction of reads with minority direction
         #WsandCs.df <- data.frame(Ws=WWandCC.regions$Ws, Cs=WWandCC.regions$Cs)
         #WsandCs.mat <- t(apply(df, 1, sort))
         #region.background <- WsandCs.mat[,1]/rowSums(WsandCs.mat)
         
         ## get fragments (reads) falling into WW and CC regions
-        WWandCC.regions.frags <- IRanges::subsetByOverlaps(lib.results$fragments, WWandCC.regions)
+        #WWandCC.regions.frags <- IRanges::subsetByOverlaps(lib.results$fragments, WWandCC.regions)
+        WWandCC.regions.frags <- IRanges::subsetByOverlaps(lib.results$fragments, WWandCC.regions.collapsed)
         WWandCC.regions.frags.grl <- GenomicRanges::split(WWandCC.regions.frags, seqnames(WWandCC.regions.frags))
         ## synchronize strand => max strand equals reference strand
         WWandCC.regions.frags.grl <- endoapply(WWandCC.regions.frags.grl, switchStrand)
@@ -90,3 +117,4 @@ synchronizeReadDir <- function(files2sync, collapseWidth=5000000) {
     
     return(syncReads)
 }
+  
