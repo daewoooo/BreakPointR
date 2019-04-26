@@ -486,7 +486,105 @@ plotBreakpointsPerChr <- function(files2plot, plotspath=NULL, chromosomes=NULL) 
         stopTimedMessage(ptm)
     }
     return(plots)
-}  
+}
+
+#' Plot breakpoint summary \pkg{\link{breakpointR}}
+#'
+#' This function takes breakpoint coverage per genomic ranges and plots them as peak along the genome.
+#' 
+#' @param gr A \code{\link{GRanges-class}} object that contains column 'cov' - breakpoint coverage per genomic regions. 
+#' @param MbPerRow ...
+#' @return A \code{\link[ggplot2:ggplot]{ggplot}} object.
+#' @author David Porubsky
+#'
+plotBreakpointCoverage <- function(gr, MbPerRow=NULL) {
+  ## Make sure input ranges contain required column 'cov'
+  if (!any(names(mcols(gr)) == 'cov')) {
+    stop("Input genomic ranges do not contain required column named 'cov' !!!\nQuiting...")
+  }
+  
+  ## Make sure only seqlevels present in GR are kept
+  gr <- keepSeqlevels(gr, as.character(unique(seqnames(gr))), pruning.mode = 'coarse')
+  
+  ## Transform bin coordinates of each chromosome into genomewide coordinates (cumulative sum of bin coordintes)
+  cum.seqlengths <- cumsum(as.numeric(seqlengths(gr)))
+  cum.seqlengths.0 <- c(0,cum.seqlengths[-length(cum.seqlengths)])
+  names(cum.seqlengths.0) <- seqlevels(gr)
+  
+  ## Get positions of ends of each chromosome to plot lones between the chromosomes
+  chr.lines <- data.frame( y=c(0,cum.seqlengths) )
+  chr.lines <- reformat(chr.lines[,1])
+  chr.lines.df <- data.frame(start=chr.lines[,1], end=chr.lines[,2])
+  chr.lines.df$col <- rep(c('gray50','gray70'), ceiling(nrow(chr.lines.df)/2))[1:nrow(chr.lines.df)]
+  
+  ## Get positions of each chromosomes names
+  chr.lines.df$label.pos <- round( cum.seqlengths.0 + (0.5 * seqlengths(gr)) )
+  chr.lines.df$label <- seqlevels(gr)
+  
+  ## Transform to genome-wide coordinates
+  gr.trans <- transCoord(gr)
+  gr.trans.df <- as.data.frame(gr.trans)
+  
+  ## Prepare data for plotting
+  steps <- c(rbind(gr.trans.df$start.genome, gr.trans.df$end.genome))
+  counts <- c(rbind(gr.trans.df$cov, gr.trans.df$cov))
+  seqnames <- rep(as.character(gr.trans.df$seqnames), each=2)
+  plt.df <- data.frame(seqnames=seqnames, pos=steps, counts=counts, stringsAsFactors=FALSE)
+  
+  ## Set plotting theme
+  my_theme <- theme(
+    legend.position="none",
+    panel.background=element_blank(),
+    panel.border=element_blank(),
+    panel.grid.major=element_blank(),
+    panel.grid.minor=element_blank(),
+    plot.background=element_blank()
+  )
+  
+  ## Split plot by cumulative size of contigs/scaffolds
+  ## Plot ## Mb per row
+  if (!is.null(MbPerRow)) {
+    chunkSize <- MbPerRow * 1000000
+    total.length <- sum(seqlengths(gr))
+    num.chunks <- round(total.length / chunkSize)
+    chunk.breaks <- seq(chunkSize, chunkSize * num.chunks, by = chunkSize)
+    chunk.IDs <- findInterval(cum.seqlengths, chunk.breaks)
+    facet <- rep(chunk.IDs, runLength(Rle(plt.df$seqnames)))
+    plt.df <- split(plt.df, facet) 
+    chr.lines.df <- split(chr.lines.df, chunk.IDs)
+    
+    plots <- list()
+    for (i in seq_along(plt.df)) {
+      plt.df.sub <- plt.df[[i]]
+      chr.lines.df.sub <- chr.lines.df[[i]]
+      plt <- ggplot() + 
+        geom_rect(data=chr.lines.df.sub, aes(xmin=start, xmax=end, ymin=-Inf, ymax=Inf, fill=col), alpha=0.5) + scale_fill_manual(values = c('gray50','gray70')) +
+        geom_step(data=plt.df.sub, aes_string(x='pos', y='counts'), col="firebrick3") +
+        xlab("Genomic position") + 
+        ylab("Counts") + 
+        scale_x_continuous(breaks=chr.lines.df.sub$label.pos, labels=chr.lines.df.sub$label, expand = c(0,0)) + 
+        geom_hline(yintercept=thresh, color='darkorange1') + 
+        my_theme + 
+        theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=1))
+      plots[[length(plots) + 1]] <- plt
+    }  
+    final.plot <- plot_grid(plotlist = plots, ncol = 1, align = 'v', axis = 'l')
+    
+  } else {
+    
+    final.plot <- ggplot() + 
+      geom_rect(data=chr.lines.df, aes(xmin=start, xmax=end, ymin=-Inf, ymax=Inf, fill=col), alpha=0.5) + scale_fill_manual(values = c('gray50','gray70')) +
+      geom_step(data=plt.df, aes_string(x='pos', y='counts'), col="firebrick3") +
+      xlab("Genomic position") + 
+      ylab("Counts") + 
+      scale_x_continuous(breaks=chr.lines.df$label.pos, labels=chr.lines.df$label, expand = c(0,0)) + 
+      geom_hline(yintercept=thresh, color='darkorange1') + 
+      my_theme + 
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=1))
+  }    
+  ## Return final plot
+  return(final.plot)
+}
 
   
 #' Transform genomic coordinates
