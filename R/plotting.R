@@ -498,6 +498,20 @@ plotBreakpointsPerChr <- function(files2plot, plotspath=NULL, chromosomes=NULL) 
 #' @author David Porubsky
 #'
 plotBreakpointCoverage <- function(gr, MbPerRow=NULL) {
+  ## Helper function
+  reformat <- function(x) {
+    out_list <- list() 
+    for ( i in seq(1, length(x), 1) ) {
+      if ((i+1) <= length(x)) {
+        out_list[[i]] <- c(x[i], x[i+1])
+      }  
+    }
+    mt <- do.call("rbind",out_list)
+    df <- data.frame(mt)
+    colnames(df) <- c("start", "end")
+    return(df)
+  } 
+  
   ## Make sure input ranges contain required column 'cov'
   if (!any(names(mcols(gr)) == 'cov')) {
     stop("Input genomic ranges do not contain required column named 'cov' !!!\nQuiting...")
@@ -563,7 +577,7 @@ plotBreakpointCoverage <- function(gr, MbPerRow=NULL) {
         xlab("Genomic position") + 
         ylab("Counts") + 
         scale_x_continuous(breaks=chr.lines.df.sub$label.pos, labels=chr.lines.df.sub$label, expand = c(0,0)) + 
-        geom_hline(yintercept=thresh, color='darkorange1') + 
+        #geom_hline(yintercept=thresh, color='darkorange1') + 
         my_theme + 
         theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=1))
       plots[[length(plots) + 1]] <- plt
@@ -578,7 +592,7 @@ plotBreakpointCoverage <- function(gr, MbPerRow=NULL) {
       xlab("Genomic position") + 
       ylab("Counts") + 
       scale_x_continuous(breaks=chr.lines.df$label.pos, labels=chr.lines.df$label, expand = c(0,0)) + 
-      geom_hline(yintercept=thresh, color='darkorange1') + 
+      #geom_hline(yintercept=thresh, color='darkorange1') + 
       my_theme + 
       theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=1))
   }    
