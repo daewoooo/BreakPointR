@@ -26,14 +26,13 @@
 #' @importFrom S4Vectors subjectHits
 #' @export
 #' @examples
-#'\dontrun{ 
 #'## Get an example file
 #'exampleFolder <- system.file("extdata", "example_bams", package="breakpointRdata")
 #'exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
 #'## Run breakpointR
-#'brkpts <- runBreakpointr(exampleFile, chromosomes='chr22', pairedEndReads=FALSE)}
+#'brkpts <- runBreakpointr(exampleFile, chromosomes='chr22', pairedEndReads=FALSE)
 #'
-runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, chromosomes=NULL, windowsize=1e6, binMethod="size", trim=10, peakTh=0.33, zlim=3.291, background=0.05, min.mapq=10, pair2frgm=FALSE, filtAlt=FALSE, minReads=20, maskRegions=NULL, conf=0.99) {
+runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, chromosomes=NULL, windowsize=1e6, binMethod="size", trim=10, peakTh=0.33, zlim=3.291, background=0.05, min.mapq=10, pair2frgm=FALSE, filtAlt=FALSE, genoT='fisher', minReads=20, maskRegions=NULL, conf=0.99) {
 
     ## check the class of the bamfile, make GRanges object of file
     if (!is(bamfile, 'GRanges')) {  
@@ -41,11 +40,7 @@ runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, c
         suppressWarnings( fragments <- readBamFileAsGRanges(bamfile, pairedEndReads=pairedEndReads, chromosomes=chromosomes, min.mapq=min.mapq, pair2frgm=pair2frgm, filtAlt=filtAlt) )
         stopTimedMessage(ptm)
     } else {
-        if (!is.null(chromosomes)) {
-            fragments <- GenomeInfoDb::keepSeqlevels(bamfile, chromosomes, pruning.mode='coarse')
-        } else {
-            fragments <- bamfile
-        }    
+        fragments <- bamfile
         bamfile <- 'CompositeFile'
     }
   
@@ -54,8 +49,8 @@ runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, c
     
     ## remove reads from maskRegions
     if (!is.null(maskRegions)) {
-        mask <- findOverlaps(maskRegions, fragments)
-        fragments <- fragments[-S4Vectors::subjectHits(mask)]        
+        mask <- IRanges::findOverlaps(maskRegions, fragments)
+        fragments <- fragments[-S4Vectors::subjectHits(mask)]
     } 
   
     reads.all.chroms <- fragments
@@ -95,16 +90,6 @@ runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, c
             ## do not normalize to the size of the chromosome 1
             reads.per.window <- windowsize 
             dw <- deltaWCalculator(frags=fragments.chr, reads.per.window=reads.per.window)
-        } else if (binMethod == "multi") {
-            ## Set the starting windowsize to be the minimal required number of reads in any given region  
-            #reads.per.window <- minReads
-            #reads.per.window <- windowsize #number of reads per bin has to be set!!!
-          
-            tiles <- unlist(GenomicRanges::tileGenome(seqlengths(fragments)[chr], tilewidth = windowsize))
-            counts <- GenomicRanges::countOverlaps(tiles, fragments.chr)
-            reads.per.window <- max(10, round(mean(counts[counts>0], trim=0.05)))
-            
-            dw <- deltaWCalculatorVariousWindows(frags=fragments.chr, reads.per.window=reads.per.window, sizes=c(2,4,8,16,32)) #used in great apes
         }
         deltaWs <- dw[seqnames(dw)==chr]
         stopTimedMessage(ptm)
@@ -119,7 +104,7 @@ runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, c
             iter <- 1
             ptm <- startTimedMessage("    genotyping ",iter, " ...")
             utils::flush.console()
-            newBreaks <- GenotypeBreaks(breaks=breaks, fragments=fragments, background=background, minReads=minReads)
+            newBreaks <- GenotypeBreaks(breaks=breaks, fragments=fragments, background=background, minReads=minReads, genoT=genoT)
             prev.breaks <- breaks  
             breaks <- newBreaks
             stopTimedMessage(ptm)
@@ -128,7 +113,7 @@ runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, c
                 utils::flush.console()
                 iter <- iter + 1
                 ptm <- startTimedMessage("    genotyping ",iter, " ...")
-                newBreaks <- GenotypeBreaks(breaks=breaks, fragments=fragments, background=background, minReads=minReads)
+                newBreaks <- GenotypeBreaks(breaks=breaks, fragments=fragments, background=background, minReads=minReads, genoT=genoT)
                 prev.breaks <- breaks  
                 breaks <- newBreaks
                 stopTimedMessage(ptm)
@@ -189,14 +174,6 @@ runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, c
             counts <- cbind(Ws,Cs)
             mcols(breakrange) <- counts
             breakrange$states <- states
-            
-            ## Estimate CN in ranges between the breakpoints (only for cumulative coverage of all cells)
-            if (bamfile == 'CompositeFile') {
-                ptm <- startTimedMessage("    estimating CN in localized regions ...")
-                breakrange <- estimateCN(frags=fragments.chr, regions=breakrange)
-                stopTimedMessage(ptm) 
-            }    
-            
             suppressWarnings( counts.all.chroms[[chr]] <- breakrange )
             
             ## Confidence intervals
@@ -274,9 +251,9 @@ runBreakpointr <- function(bamfile, ID=basename(bamfile), pairedEndReads=TRUE, c
     
     ## save brekpointR results into a single obejct
     fragments <- fragments[,'mapq'] #store only mapq values to save space
+    #breaks.all.chroms$confint <- confint.all.chroms[,0] #store confidence intervals as a part of breaks object
     data.obj <- list(ID=ID, fragments=fragments, deltas=deltas.all.chroms, breaks=breaks.all.chroms, confint=confint.all.chroms, counts=counts.all.chroms, lib.metrics=library.metrics, params=parameters)
     class(data.obj) <- class.breakpoint
   
     return(data.obj)
 }
-

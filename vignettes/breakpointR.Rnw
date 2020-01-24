@@ -1,0 +1,192 @@
+%\VignetteIndexEntry{How to use breakpointR}
+%\VignetteEngine{knitr::knitr}
+\documentclass{article}
+
+<<style-knitr, eval=TRUE, echo=FALSE, results='asis'>>=
+BiocStyle::latex()
+@
+
+\author{David Porubsky\thanks{\email{david.porubsky@gmail.com}}}
+\title{How to use breakpointR}
+
+\begin{document}
+
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+concordance=TRUE
+)
+@
+
+
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+concordance=TRUE
+)
+@
+
+\maketitle
+\tableofcontents
+\clearpage
+<<options, results='hide', message=FALSE, eval=TRUE, echo=FALSE>>=
+library(breakpointR)
+options(width=90)
+@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+BreakpointR is a novel algorithm designed to accurately tracks template strand changes in Strand-seq data using a bi-directional read-based binning. Read-based binning strategy scales each bin size dynamically to accommodate defined number of reads what accounts for mappability bias in sparsely covered single-cell Strand-seq data. In such dynamically scaled bins, read directionality is tracked in order to search for points where template-strand-state changes. BreakpointR takes as an input reads aligned to the reference genome and stored in a single BAM file per single cell. BreakpointR outputs locations where directionality of sequenced template strands changes. Template strands changes are defined by changes in proportion of reads mapped to positive ('Crick') and negative ('Watson') strand of the reference genome. In a diploid organism such as human we distinguish three possible scenarios of template strand inheritence. If both parental homologues were inherited as Watson template (we assign a WW state), if only Crick templates were inherited (we assign CC state), or one Watson and one Crick template was inherited by each parent (we assign WC state). 
+
+\section{Quickstart}
+
+The main function of this package is called \Rfunction{breakpointr()} and performs all the necessary steps to get from aligned reads in BAMs to predicted breakpoints (changes) in strand directionality. For an unexperienced user we advise to run \Rpackage{breakpointR} with default parameters and later based on the obtained results start to tweak certain parameters. For more detailed guidance on how to tweak certain parameters see section \ref{sec:settings}.
+
+<<eval=FALSE>>==
+library(breakpointR)
+## Run breakpointR with a default parameters
+breakpointr(inputfolder='folder-with-BAMs', outputfolder='output-folder')
+@
+
+Although in most cases the one of the above commands will produce reasonably good results, it might be worthwhile to adjust the default parameters in order to improve performance and the quality of the results. You can get a description of all available parameters by typing
+
+<<eval=TRUE>>==
+?breakpointr
+@
+
+After the function has finished, you will find the folder \textbf{output-directory} containing all produced files and plots. This folder contains the following \textbf{files} and \textbf{folders}:
+\begin{itemize}
+\item \emph{breakpointR.config}: This file contains all parameters that are necessary to reproduce your analysis.
+You can specify this file as shown below in order to run another analysis with the same parameter settings.
+
+<<eval=FALSE>>==
+breakpointr(..., configfile='breakpointR.config')
+@
+
+
+\item \textbf{breakpoints} UCSC browser formatted bedgraphs compile all breakpoints across all single-cell libraries. This folder also contains list of all localized breakpoints in all single-cell libraries. Lastly, locations of breakpoint hotspots are reported here if 
+<<eval=FALSE>>==
+callHotSpots=TRUE
+@
+\item \textbf{browserfiles} UCSC browser formatted files with exported reads, deltaWs and breakpoints for every single-cell library.
+\item \textbf{data} Contains RData files that store complete results of breakpointR analysis for each single-cell library.
+\item \textbf{plots}: Genome-wide plots for selected chromosomes, genome-wide heatmap of strand states as well as chromosome specific read distribution together with localized breakpoints. All aforementioned plots are created by default.
+
+\end{itemize}
+
+\subsection{Running breakpointR}
+The function \Rfunction{breakpointr()} takes as an input BAM files stored in the inputfolder and produces an outputfolder with results, plots and browserfiles. The following code is an example of how to run \Rpackage{breakpointR} on single-end reads with a 'windowsize' defined by size of 1Mb (see subsection \ref{subsec:binning}). Results will be stored in \textbf{outputfolder/data} as RData objects. Such data can be later loaded for further processing and customized plotting.
+
+<<eval=TRUE, message=FALSE>>==
+library(breakpointR)
+
+## Get some example files
+datafolder <- system.file("extdata", "example_bams", package="breakpointRdata")
+outputfolder <- tempdir()
+## Run breakpointR
+breakpointr(inputfolder = datafolder, outputfolder = outputfolder, 
+            chromosomes = 'chr22', pairedEndReads = FALSE,
+            reuse.existing.files = FALSE, windowsize = 1000000, 
+            binMethod = 'size', pair2frgm = FALSE, min.mapq = 10, 
+            filtAlt = TRUE)
+
+@
+
+\newpage
+
+\section{\label{sec:settings}Recommended settings}
+
+\subsection{Reading BAM files}
+
+Currently \Rpackage{breakpointR} can take as an input only aligned reads stored in BAM files. All BAM files are expected to be present in a folder specified as \Rfunction{breakpointr(..., inputfolder)}. We advise to remove reads with low mapping quality and reads with alternative alignments. Duplicated reads are removed by default.
+
+<<eval=FALSE>>==
+breakpointr(..., min.mapq = 10, filtAlt = TRUE)
+@
+
+\subsection{\label{subsec:maskregions}Removing certain regions}
+
+\Rpackage{breakpointR} allows a user to exclude certain genomic regions from the analysis. This comes handy when one wants to remove reads that falls into low complexity regions such as segmental duplications or centromeres. Such low complexity regions might cause false positive breakpoints due to the spurious mappings of short reads. To mask certain genomic regions user has to define path to a bed formatted text file as \Rfunction{breakpointr(..., maskRegions)}. All reads falling into these regions will be discarded prior to breakpoint detection. User defined regions to mask can be downloaded from the UCSC Table Browser.
+
+\subsection{\label{subsec:binning}Binning strategy}
+
+\Rpackage{breakpointR} uses read based binning strategy and offers two approaches to set the bin size: (1) user defined number of reads in each bin or (2) number of reads in every bin is selected based on desired genomic size of each bin. 
+
+<<eval=FALSE>>==
+library(breakpointR)
+## Binning strategy based on desired bin length
+breakpointr(inputfolder='folder-with-BAM', outputfolder='output-folder',
+            windowsize=1e6, binMethod='size')
+## Binning strategy based user-defined number of reads in each bin
+breakpointr(inputfolder='folder-with-BAM', outputfolder='output-folder',
+            windowsize=100, binMethod='reads')
+@
+
+The sensitivity and specificity of breakpoint detection depend on user defined bin size. We recommend to select rather large bin size ($>$=1Mb) in order to reliably detect low frequency sister chromatid exchange (SCE) events. In order to detect smaller events like inversions smaller bin size is recommended. Keep in mind that such settings also leads to a higher level of false positive breakpoints. In this case one might need to tweak other breakpoint detection parameters (see subsection \ref{subsec:detectBreakpoint}).
+
+\subsection{\label{subsec:detectBreakpoint}Breakpoint peak detection}
+
+Breakpoint detection is based on finding significant peaks in deltaW values. Level of peak significance is measured in the number of standard deviations (SD) from the set threshold (z-score) \Rfunction{breakpointr(..., peakTh)}. By default the threshold is set to the 1/3 of the highest detlaW value. For the data with noisy and uneven coverage we recommend to set higher threshold, for example 1/2 of the highest deltaW value. In addition, we also recommend to tweak 'trim' option \Rfunction{breakpointr(..., trim)} in order to set a fraction of extreme deltaW values to be excluded from SD calculation.
+
+<<eval=TRUE, warning=FALSE, message=FALSE>>=
+## Example deltaW values
+exampleFolder <- system.file("extdata", "example_results",
+                             package="breakpointRdata")
+exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
+breakpoint.object <- loadFromFiles(exampleFile)
+head(breakpoint.object[[1]]$deltas)
+@
+
+\subsection{Background reads}
+
+Background reads are a common feature of Strand-seq libraries. Strand-seq is based on removal of newly synthesized strand during DNA replication, however this process is not perfect. Therefore, we usually expect low abundance reads aligned in a opposite direction even for purely WW or CC chromosomes. An another reason to see such artifacs is imperfect read mapping especially in repetitive and complex genomic regions. To remove reads falling into such regions see subsection \ref{subsec:maskregions}.
+
+\subsection{Calling breakpoint hotspots}
+
+In order to find locations where breakpoints occur around the same genomic position in multiple Strand-seq libraries there is \Rfunction{hotspotter()}. Function can be invoked by setting corresponding parameter to 'TRUE'. It make sense to set this parameter only if there is available a reasonable number ($>$=50) of Strand-seq libraries.
+
+<<eval=FALSE>>==
+## To run breakpoint hotspot analysis using the main breakpointR function
+breakpointr(..., callHotSpots=TRUE)
+@
+
+<<eval=TRUE, message=FALSE>>==
+## To run breakpoint hotspot analysis using exported data
+exampleFolder <- system.file("extdata", "example_results", 
+                             package="breakpointRdata")
+exampleFiles <- list.files(exampleFolder, full.names=TRUE)
+breakpoint.objects <- loadFromFiles(exampleFiles)
+## Extract breakpoint coordinates
+breaks <- lapply(breakpoint.objects, '[[', 'breaks')
+## Get hotspot coordinates
+hotspots <- hotspotter(breaks, bw=1e6)
+@
+
+\subsection{Loading results and plotting single cells}
+
+<<eval=TRUE, warning=FALSE, message=FALSE, fig.width=12, fig.height=4>>==
+## Plotting a single library
+exampleFolder <- system.file("extdata", "example_results",
+                             package="breakpointRdata")
+exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
+plotBreakpoints(exampleFile)
+@
+
+<<eval=TRUE, warning=FALSE, message=FALSE, fig.width=12, fig.height=5>>==
+## Plotting a single library
+exampleFolder <- system.file("extdata", "example_results",
+                             package="breakpointRdata")
+exampleFiles <- list.files(exampleFolder, full.names=TRUE)[1:4]
+plotBreakpointsPerChr(exampleFiles, chromosomes = 'chr7')
+@
+
+\newpage
+
+\section{Session Info}
+
+<<sessionInfo, results='asis', eval=TRUE>>=
+toLatex(sessionInfo())
+@
+
+
+\end{document}
+

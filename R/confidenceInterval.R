@@ -16,7 +16,7 @@
 #'## Load the file 
 #'breakpoint.objects <- get(load(exampleFile))
 #'## Calculate confidence intervals of genotyped breakpoints
-#'confint <- confidenceInterval(breakpoint.objects$breaks, breakpoint.objects$fragments, background=0.02)}
+#'confint <- confidenceInterval(breaks=breakpoint.objects$breaks, fragments=breakpoint.objects$fragments, background=0.02)}
 #'
 confidenceInterval <- function(breaks, fragments, background=0.05, conf=0.99) {
 
@@ -34,13 +34,13 @@ confidenceInterval <- function(breaks, fragments, background=0.05, conf=0.99) {
 
     ## Do chromosomes one by one
     breaks.conf <- GenomicRanges::GRangesList()
-    seqlevels(breaks.conf) <- seqlevels(breaks)
+    GenomeInfoDb::seqlevels(breaks.conf) <- GenomeInfoDb::seqlevels(breaks)
     for (chrom in unique(seqnames(breaks))) {
         cbreaks <- breaks[seqnames(breaks) == chrom]
         cfrags <- fragments[seqnames(fragments) == chrom]
         #cfrags <- GenomicRanges::sort(cfrags, ignore.strand=TRUE)
         if (length(cbreaks) > 0) {
-            for (ibreak in 1:length(cbreaks)) {
+            for (ibreak in seq_along(cbreaks)) {
                 genotype <- cbreaks$genoT[ibreak]
                 # Left side
                 ind <- which(start(cfrags) < start(cbreaks)[ibreak])
@@ -116,13 +116,13 @@ confidenceInterval.binomial <- function(breaks, fragments, background=0.02, conf
   
     ## Do chromosomes one by one
     breaks.conf <- GenomicRanges::GRangesList()
-    seqlevels(breaks.conf) <- seqlevels(breaks)
+    GenomeInfoDb::seqlevels(breaks.conf) <- GenomeInfoDb::seqlevels(breaks)
     for (chrom in unique(seqnames(breaks))) {
         cbreaks <- breaks[seqnames(breaks) == chrom]
         cfrags <- fragments[seqnames(fragments) == chrom]
         #cfrags <- GenomicRanges::sort(cfrags, ignore.strand=TRUE)
         if (length(cbreaks) > 0) {
-            for (ibreak in 1:length(cbreaks)) {
+            for (ibreak in seq_along(cbreaks)) {
                 genotype <- cbreaks$genoT[ibreak]
                 # Left side
                 ind <- which(start(cfrags) < start(cbreaks)[ibreak])
@@ -141,7 +141,8 @@ confidenceInterval.binomial <- function(breaks, fragments, background=0.02, conf
                     strandtocompare <- names(which(probs[, 'left', genotype] >= probs[, 'right', genotype]))
                     p <- stats::pbinom(q = numReads[strandtocompare], size = sum(numReads), prob = probs[strandofread, 'left', genotype])
                 }
-                start(cbreaks)[ibreak] <- start(cfrags)[ind-i1]
+                ## Make sure that computed CI is not bigger than the start of a predicted breakpoint
+                start(cbreaks)[ibreak] <- min(start(cbreaks)[ibreak], start(cfrags)[ind-i1])
                 # Right side
                 ind <- which(end(cfrags) > end(cbreaks)[ibreak])
                 ind <- ind[1]
@@ -159,7 +160,8 @@ confidenceInterval.binomial <- function(breaks, fragments, background=0.02, conf
                     strandtocompare <- names(which(probs[, 'right', genotype] >= probs[, 'left', genotype]))
                     p <- stats::pbinom(q = numReads[strandtocompare], size = sum(numReads), prob = probs[strandofread, 'right', genotype])
                 }
-                end(cbreaks)[ibreak] <- end(cfrags)[ind+i1]
+                ## Make sure that computed CI is not smaller than the end of a predicted breakpoint
+                end(cbreaks)[ibreak] <- max(end(cbreaks)[ibreak], end(cfrags)[ind+i1])
             }
         }
         breaks.conf[[chrom]] <- cbreaks

@@ -27,11 +27,8 @@ breakSeekr <- function(deltaWs, trim=10, peakTh=0.33, zlim=3.291) {
         return()
     }
     deltaW <- deltaWs$deltaW
-    # calculates the fraction (e.g. 0.33) of the highest deltaW > this will be the th
-    th <- max(deltaW)*peakTh
-    # set threshold as a point ~3SD away from the median [EXPERIMENTAL]
-    #th <- (sd(deltaW)*4) + median(deltaW) # do not work well for single cell data only for composite files
-    
+    th <- max(deltaW)*peakTh # calculates the fraction (e.g. 0.33) of the highest deltaW > this will be the th
+  
 # group the breakpoints to refine at the peak of the peak:
 #  if (mean(deltaW,na.rm=TRUE) <= 1) { # if mean is so low than there is no peak, skip library
 #    message('no peaks here!')

@@ -11,6 +11,16 @@
 #' @importFrom stats density runif ecdf
 #' @importFrom S4Vectors endoapply
 #' @author Aaron Taudt
+#' @export
+#' @examples 
+#'## Get example BreakPoint objects
+#'exampleFolder <- system.file("extdata", "example_results", package="breakpointRdata")
+#'exampleFiles <- list.files(exampleFolder, full.names=TRUE)
+#'breakpoint.objects <- loadFromFiles(exampleFiles)
+#'## Extract breakpoint coordinates
+#'breaks <- lapply(breakpoint.objects, '[[', 'breaks')
+#'## Get hotspot coordinates
+#'hotspots <- hotspotter(gr.list=breaks, bw=1e6)
 #'
 hotspotter <- function(gr.list, bw, pval=1e-8) {
 
@@ -31,7 +41,7 @@ hotspotter <- function(gr.list, bw, pval=1e-8) {
             kde <- stats::density(midpoints,bw=bw,kernel='gaussian')
             # Random distribution of genomic events
             kde.densities <- numeric()
-            for (i1 in 1:100) {
+            for (i1 in seq_len(100)) {
                 midpoints.r <- round(stats::runif(length(midpoints),1,seqlengths(gr)[chrom]))
                 kde.r <- stats::density(midpoints.r,bw=bw,kernel='gaussian')
                 kde.densities <- c(kde.densities, kde.r$y)

@@ -16,7 +16,7 @@
 #'exampleFolder <- system.file("extdata", "example_results", package="breakpointRdata")
 #'exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
 #'## Plot the file
-#'plotBreakpoints(exampleFile)
+#'plotBreakpoints(files2plot=exampleFile)
 
 plotBreakpoints <- function(files2plot, file=NULL) {
     
@@ -29,7 +29,7 @@ plotBreakpoints <- function(files2plot, file=NULL) {
     }
   
     plots <- list()
-    for (i in 1:numplots) {
+    for (i in seq_len(numplots)) {
         if (is(files2plot, 'character')) {  
             data <- loadFromFiles(files2plot[i], check.class=class.breakpoint)[[1]]
         } else if (is(files2plot, class.breakpoint)) {  
@@ -50,6 +50,13 @@ plotBreakpoints <- function(files2plot, file=NULL) {
         lib.metrics <- round(lib.metrics, digits = 5)
         lib.metrics <- paste(names(lib.metrics), lib.metrics, sep = '=')
         lib.metrics <- paste(lib.metrics, collapse = "  |  ")
+        
+        #Skip chromosomes shorter then 5-times of the bin size 200kb
+        if (any(seqlengths(reads) < 200000*5)) {
+          message(" Skipping short chromosomes/contigs!")
+          keep.chroms <- names(seqlengths(reads)[seqlengths(reads) >= 200000*5])
+          reads <- GenomeInfoDb::keepSeqlevels(reads, keep.chroms, pruning.mode = 'coarse')
+        }  
         
         binned.data <- unlist(GenomicRanges::tileGenome(seqlengths(reads), tilewidth = 200000))
         
@@ -107,11 +114,10 @@ plotBreakpoints <- function(files2plot, file=NULL) {
         
         #construct ggplot
         dfplot.reads$mCrickreads <- -dfplot.reads$Crickreads
-        ggplt1 <- ggplot(dfplot.reads)
-        ggplt1 <- ggplt1 + geom_linerange(aes_string(ymin=0, ymax='mCrickreads', x='midpoint'), color="paleturquoise4", size=0.2)
-        ggplt1 <- ggplt1 + geom_linerange(aes_string(ymin=0, ymax='Watsonreads', x='midpoint'), color="sandybrown", size=0.2)
-        ggplt1 <- ggplt1 + geom_linerange(data=chr.lines, aes_string(ymin=-Inf, ymax=Inf, x='y'), col='black') + xlab(NULL)
-        ggplt1 <- ggplt1 + 
+        ggplt1 <- ggplot(dfplot.reads) +
+            geom_linerange(aes_string(ymin=0, ymax='mCrickreads', x='midpoint'), color="paleturquoise4", size=0.2) +
+            geom_linerange(aes_string(ymin=0, ymax='Watsonreads', x='midpoint'), color="sandybrown", size=0.2) +
+            geom_linerange(data=chr.lines, aes_string(ymin=-Inf, ymax=Inf, x='y'), col='black') + xlab(NULL) +
             ylab("Read counts") +
             scale_x_continuous(breaks=chr.label.pos, labels=names(chr.label.pos), expand = c(0,0)) +
             theme(axis.text.x=element_blank(), axis.ticks.x=element_blank()) +
@@ -146,13 +152,13 @@ plotBreakpoints <- function(files2plot, file=NULL) {
         #get midpoint values for each breakpoint
         dfplot.breaks$midpoint <- dfplot.breaks$start.genome + ( (dfplot.breaks$end.genome - dfplot.breaks$start.genome) %/% 2)
         
-        ggplt2 <- ggplot(dfplot.counts)
-        ggplt2 <- ggplt2 + geom_rect(aes_string(xmin='start.genome', xmax='end.genome', ymin=0, ymax='scaled', fill='fill.strand'))
-        ggplt2 <- ggplt2 + geom_linerange(data=chr.lines, aes_string(ymin=-Inf, ymax=Inf, x='y'), col='black')
-        ggplt2 <- ggplt2 + scale_fill_manual(values=c("sandybrown","paleturquoise4"))
+        ggplt2 <- ggplot(dfplot.counts) +
+            geom_rect(aes_string(xmin='start.genome', xmax='end.genome', ymin=0, ymax='scaled', fill='fill.strand')) +
+            geom_linerange(data=chr.lines, aes_string(ymin=-Inf, ymax=Inf, x='y'), col='black') +
+            scale_fill_manual(values=c("sandybrown","paleturquoise4"))
         if (nrow(dfplot.breaks) > 0) {
-            ggplt2 <- ggplt2 + geom_point(data=dfplot.breaks, aes_string(x='midpoint', y=0), size=5, color='red', shape=124, inherit.aes = FALSE)
-            ggplt2 <- ggplt2 +
+            ggplt2 <- ggplt2 + 
+                geom_point(data=dfplot.breaks, aes_string(x='midpoint', y=0), size=5, color='red', shape=124, inherit.aes = FALSE) +
                 xlab(NULL) +
                 ylab("Breaks") +
                 scale_x_continuous(expand = c(0,0)) +
@@ -169,10 +175,9 @@ plotBreakpoints <- function(files2plot, file=NULL) {
             
         ### PLOT STATES
         
-        ggplt3 <- ggplot(dfplot.counts)
-        ggplt3 <- ggplt3 + geom_rect(aes_string(xmin='start.genome', xmax='end.genome', ymin=0, ymax=10, fill='states'))
-        ggplt3 <- ggplt3 + geom_linerange(data=chr.lines, aes_string(ymin=0, ymax=10, x='y'), col='black')
-        ggplt3 <- ggplt3 + 
+        ggplt3 <- ggplot(dfplot.counts) +
+            geom_rect(aes_string(xmin='start.genome', xmax='end.genome', ymin=0, ymax=10, fill='states')) +
+            geom_linerange(data=chr.lines, aes_string(ymin=0, ymax=10, x='y'), col='black') +
             xlab("Chromosomes") +
             ylab("States") +
             scale_x_continuous(breaks=chr.label.pos, labels=names(chr.label.pos), expand = c(0,0)) +
@@ -239,7 +244,7 @@ plotHeatmap <- function(files2plot, file=NULL, hotspots=NULL) {
     IDs <- list()
     grl <- GRangesList()
     breaks <- GRangesList()
-    for (i in 1:numlibs2plot) {  
+    for (i in seq_len(numlibs2plot)) {  
         data <- loadFromFiles(files2plot[i], check.class=class.breakpoint)
         IDs[[i]] <- data[[1]]$ID
         grl[[i]] <- data[[1]]$counts
@@ -281,44 +286,42 @@ plotHeatmap <- function(files2plot, file=NULL, hotspots=NULL) {
     )
 
     # Plot breaks summary
-    ggplt1 <- ggplot(dfplot.disjoin.breaks)
-    ggplt1 <- ggplt1 + geom_rect(aes_string(ymin=0, ymax='hits', xmin='start.genome', xmax='end.genome'), fill="red", color="red")
-    ggplt1 <- ggplt1 + geom_vline(aes_string(xintercept='y'), data=df.chroms, col='black')
-    ggplt1 <- ggplt1 + 
-        scale_y_continuous(expand = c(0,0)) +
-        ylab("Break\ncounts") +
-        my_theme
+    #ggplt1 <- ggplot(dfplot.disjoin.breaks)
+    #ggplt1 <- ggplt1 + geom_rect(aes_string(ymin=0, ymax='hits', xmin='start.genome', xmax='end.genome'), fill="red", color="red")
+    #ggplt1 <- ggplt1 + geom_vline(aes_string(xintercept='y'), data=df.chroms, col='black')
+    #ggplt1 <- ggplt1 + 
+    #    scale_y_continuous(expand = c(0,0)) +
+    #    ylab("Break\ncounts") +
+    #    my_theme
     
     # Data
     df <- list()
-    for (i1 in 1:length(grl)) {
+    for (i1 in seq_along(grl)) {
         df[[length(df)+1]] <- data.frame(start=grl[[i1]]$start.genome, end=grl[[i1]]$end.genome, seqnames=seqnames(grl[[i1]]), sample=IDs[[i1]], state=grl[[i1]]$states)
     }
     df <- do.call(rbind, df)
 
     ## PLOT
     if (is.null(hotspots)) {
-        ggplt2 <- ggplot(df)
-        ggplt2 <- ggplt2 + geom_linerange(aes_string(ymin='start', ymax='end', x='sample', col='state'), size=5)
-        ggplt2 <- ggplt2 +
+        ggplt2 <- ggplot(df) +
+            geom_linerange(aes_string(ymin='start', ymax='end', x='sample', col='state'), size=5) +
             scale_y_continuous(breaks=label.pos, labels=names(label.pos), expand=c(0,0)) +
             coord_flip() +
             scale_color_manual(values=c('cc'="paleturquoise4", 'wc'="olivedrab",'ww'="sandybrown",'?'="red")) +
-            theme(panel.background=element_blank(), axis.ticks.x=element_blank(), axis.text.x=element_text(size=20))
-        ggplt2 <- ggplt2 + geom_hline(aes_string(yintercept='y'), data=df.chroms, col='black')
+            theme(panel.background=element_blank(), axis.ticks.x=element_blank(), axis.text.x=element_text(size=20)) +
+            geom_hline(aes_string(yintercept='y'), data=df.chroms, col='black')
     } else {
         hotspots.trans <- transCoord(hotspots)
         hotspot.midpoint <- hotspots.trans$start.genome + (hotspots.trans$end.genome - hotspots.trans$start.genome)/2
         hotspot.midpoint <- data.frame(y=hotspot.midpoint)
-        ggplt2 <- ggplot(df)
-        ggplt2 <- ggplt2 + geom_linerange(aes_string(ymin='start', ymax='end', x='sample', col='state'), size=5)
-        ggplt2 <- ggplt2 +
+        ggplt2 <- ggplot(df) +
+            geom_linerange(aes_string(ymin='start', ymax='end', x='sample', col='state'), size=5) +
             scale_y_continuous(breaks=label.pos, labels=names(label.pos)) +
             coord_flip() +
             scale_color_manual(values=c('cc'="paleturquoise4", 'wc'="olivedrab",'ww'="sandybrown",'?'="red")) +
-            theme(panel.background=element_blank(), axis.ticks.x=element_blank(), axis.text.x=element_text(size=20))
-        ggplt2 <- ggplt2 + geom_hline(aes_string(yintercept='y'), data=df.chroms, col='black') 
-        ggplt2 <- ggplt2 + geom_hline(aes_string(yintercept='y'), data=hotspot.midpoint, col='red', alpha=0.5)
+            theme(panel.background=element_blank(), axis.ticks.x=element_blank(), axis.text.x=element_text(size=20)) +
+            geom_hline(aes_string(yintercept='y'), data=df.chroms, col='black') +
+            geom_hline(aes_string(yintercept='y'), data=hotspot.midpoint, col='red', alpha=0.5)
     }  
     stopTimedMessage(ptm)
     
@@ -358,18 +361,30 @@ plotHeatmap <- function(files2plot, file=NULL, hotspots=NULL) {
 #'exampleFiles <- list.files(exampleFolder, full.names=TRUE)
 #'## Plot results
 #'plotBreakpointsPerChr(exampleFiles, chromosomes='chr7')
-
+#'
 plotBreakpointsPerChr <- function(files2plot, plotspath=NULL, chromosomes=NULL) {
 
     if (is(files2plot, class.breakpoint)) {  
         numplots <- 1
         chroms.in.data <- GenomeInfoDb::seqlevels(files2plot$fragments)
+        chrom.lengths <- GenomeInfoDb::seqlengths(files2plot$fragments)
+        #Skip chromosomes shorter then 5-times of the bin size 200kb
+        if (any(chrom.lengths < 200000*5)) {
+            message("Will skip short chromosomes/contigs!")
+            chroms.in.data <- names(chrom.lengths[chrom.lengths >= 200000*5])
+        }
         #files2plot <- list(files2plot)
     } else if (is.character(files2plot)) {
         numplots <- length(files2plot)
-        #get sequence levels from a single BreakpointR obejct
+        #get sequence levels and sequence lengths from a single BreakpointR obejct
         first.file <- loadFromFiles(files2plot[[1]], check.class=class.breakpoint)[[1]]
         chroms.in.data <- GenomeInfoDb::seqlevels(first.file$fragments)
+        chrom.lengths <- GenomeInfoDb::seqlengths(first.file$fragments)
+        #Skip chromosomes shorter then 5-times of the bin size 200kb
+        if (any(chrom.lengths < 200000*5)) {
+            message("Will skip short chromosomes/contigs!")
+            chroms.in.data <- names(chrom.lengths[chrom.lengths >= 200000*5])
+        }
     } else {
       stop("Unsupported object class submitted!!!")
     }
@@ -389,14 +404,14 @@ plotBreakpointsPerChr <- function(files2plot, plotspath=NULL, chromosomes=NULL) 
     
         dfplot.reads.chr <- list()
         dfplot.breaks.chr <- list()
-        for (i in 1:numplots) {
+        for (i in seq_len(numplots)) {
         
             if (is(files2plot, 'character')) {  
-              data <- loadFromFiles(files2plot[i], check.class=class.breakpoint)[[1]]
+                data <- loadFromFiles(files2plot[i], check.class=class.breakpoint)[[1]]
             } else if (is(files2plot, class.breakpoint)) {  
-              data <- files2plot
+                data <- files2plot
             } else {
-              stop("Only 'BreakPoint' class object can be plotted")
+                stop("Only 'BreakPoint' class object can be plotted")
             }
               
             bamfile <- data$ID
@@ -458,21 +473,22 @@ plotBreakpointsPerChr <- function(files2plot, plotspath=NULL, chromosomes=NULL) 
     
         #construct ggplot
         dfplot.reads.chr$mCrickreads <- -dfplot.reads.chr$Crickreads
-        ggplt <- ggplot(dfplot.reads.chr)
-        ggplt <- ggplt + geom_linerange(aes_string(ymin=0, ymax='mCrickreads', x='midpoint'), color="paleturquoise4", size=1)
-        ggplt <- ggplt + facet_wrap(ID ~ seqnames, scales = "free", ncol=1)
-        ggplt <- ggplt + geom_linerange(aes_string(ymin=0, ymax='Watsonreads', x='midpoint'), color="sandybrown", size=1)
-        ggplt <- ggplt +
+        ggplt <- ggplot(dfplot.reads.chr) +
+            geom_linerange(aes_string(ymin=0, ymax='mCrickreads', x='midpoint'), color="paleturquoise4", size=1) +
+            facet_wrap(ID ~ seqnames, scales = "free", ncol=1) +
+            geom_linerange(aes_string(ymin=0, ymax='Watsonreads', x='midpoint'), color="sandybrown", size=1) +
             xlab("Genomic position") +
             ylab("Read counts") +
             scale_x_continuous(expand = c(0,0))
         if (!is.null(dfplot.breaks.chr)) {
             #get midpoint values for each genomic bin
             dfplot.breaks.chr$midpoint <- dfplot.breaks.chr$start + ( (dfplot.breaks.chr$end - dfplot.breaks.chr$start) %/% 2)
-            ggplt <- ggplt + geom_linerange(data=dfplot.breaks.chr, aes_string(ymin=-Inf, ymax=Inf, x='midpoint'), col='black')
-            ggplt <- ggplt + facet_wrap(ID ~ seqnames, scales = "free", ncol=1) + my_theme
+            ggplt <- ggplt +
+                geom_linerange(data=dfplot.breaks.chr, aes_string(ymin=-Inf, ymax=Inf, x='midpoint'), col='black') +
+                facet_wrap(ID ~ seqnames, scales = "free", ncol=1) + my_theme
         } else {
-            ggplt <- ggplt + facet_wrap(ID ~ seqnames, scales = "free", ncol=1) + my_theme
+            ggplt <- ggplt +
+                facet_wrap(ID ~ seqnames, scales = "free", ncol=1) + my_theme
         }
         
         if (!is.null(plotspath)) {
@@ -488,130 +504,3 @@ plotBreakpointsPerChr <- function(files2plot, plotspath=NULL, chromosomes=NULL) 
     return(plots)
 }
 
-#' Plot breakpoint summary \pkg{\link{breakpointR}}
-#'
-#' This function takes breakpoint coverage per genomic ranges and plots them as peak along the genome.
-#' 
-#' @param gr A \code{\link{GRanges-class}} object that contains column 'cov' - breakpoint coverage per genomic regions. 
-#' @param MbPerRow ...
-#' @return A \code{\link[ggplot2:ggplot]{ggplot}} object.
-#' @author David Porubsky
-#'
-plotBreakpointCoverage <- function(gr, MbPerRow=NULL) {
-  ## Helper function
-  reformat <- function(x) {
-    out_list <- list() 
-    for ( i in seq(1, length(x), 1) ) {
-      if ((i+1) <= length(x)) {
-        out_list[[i]] <- c(x[i], x[i+1])
-      }  
-    }
-    mt <- do.call("rbind",out_list)
-    df <- data.frame(mt)
-    colnames(df) <- c("start", "end")
-    return(df)
-  } 
-  
-  ## Make sure input ranges contain required column 'cov'
-  if (!any(names(mcols(gr)) == 'cov')) {
-    stop("Input genomic ranges do not contain required column named 'cov' !!!\nQuiting...")
-  }
-  
-  ## Make sure only seqlevels present in GR are kept
-  gr <- keepSeqlevels(gr, as.character(unique(seqnames(gr))), pruning.mode = 'coarse')
-  
-  ## Transform bin coordinates of each chromosome into genomewide coordinates (cumulative sum of bin coordintes)
-  cum.seqlengths <- cumsum(as.numeric(seqlengths(gr)))
-  cum.seqlengths.0 <- c(0,cum.seqlengths[-length(cum.seqlengths)])
-  names(cum.seqlengths.0) <- seqlevels(gr)
-  
-  ## Get positions of ends of each chromosome to plot lones between the chromosomes
-  chr.lines <- data.frame( y=c(0,cum.seqlengths) )
-  chr.lines <- reformat(chr.lines[,1])
-  chr.lines.df <- data.frame(start=chr.lines[,1], end=chr.lines[,2])
-  chr.lines.df$col <- rep(c('gray50','gray70'), ceiling(nrow(chr.lines.df)/2))[1:nrow(chr.lines.df)]
-  
-  ## Get positions of each chromosomes names
-  chr.lines.df$label.pos <- round( cum.seqlengths.0 + (0.5 * seqlengths(gr)) )
-  chr.lines.df$label <- seqlevels(gr)
-  
-  ## Transform to genome-wide coordinates
-  gr.trans <- transCoord(gr)
-  gr.trans.df <- as.data.frame(gr.trans)
-  
-  ## Prepare data for plotting
-  steps <- c(rbind(gr.trans.df$start.genome, gr.trans.df$end.genome))
-  counts <- c(rbind(gr.trans.df$cov, gr.trans.df$cov))
-  seqnames <- rep(as.character(gr.trans.df$seqnames), each=2)
-  plt.df <- data.frame(seqnames=seqnames, pos=steps, counts=counts, stringsAsFactors=FALSE)
-  
-  ## Set plotting theme
-  my_theme <- theme(
-    legend.position="none",
-    panel.background=element_blank(),
-    panel.border=element_blank(),
-    panel.grid.major=element_blank(),
-    panel.grid.minor=element_blank(),
-    plot.background=element_blank()
-  )
-  
-  ## Split plot by cumulative size of contigs/scaffolds
-  ## Plot ## Mb per row
-  if (!is.null(MbPerRow)) {
-    chunkSize <- MbPerRow * 1000000
-    total.length <- sum(seqlengths(gr))
-    num.chunks <- round(total.length / chunkSize)
-    chunk.breaks <- seq(chunkSize, chunkSize * num.chunks, by = chunkSize)
-    chunk.IDs <- findInterval(cum.seqlengths, chunk.breaks)
-    facet <- rep(chunk.IDs, runLength(Rle(plt.df$seqnames)))
-    plt.df <- split(plt.df, facet) 
-    chr.lines.df <- split(chr.lines.df, chunk.IDs)
-    
-    plots <- list()
-    for (i in seq_along(plt.df)) {
-      plt.df.sub <- plt.df[[i]]
-      chr.lines.df.sub <- chr.lines.df[[i]]
-      plt <- ggplot() + 
-        geom_rect(data=chr.lines.df.sub, aes(xmin=start, xmax=end, ymin=-Inf, ymax=Inf, fill=col), alpha=0.5) + scale_fill_manual(values = c('gray50','gray70')) +
-        geom_step(data=plt.df.sub, aes_string(x='pos', y='counts'), col="firebrick3") +
-        xlab("Genomic position") + 
-        ylab("Counts") + 
-        scale_x_continuous(breaks=chr.lines.df.sub$label.pos, labels=chr.lines.df.sub$label, expand = c(0,0)) + 
-        #geom_hline(yintercept=thresh, color='darkorange1') + 
-        my_theme + 
-        theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=1))
-      plots[[length(plots) + 1]] <- plt
-    }  
-    final.plot <- plot_grid(plotlist = plots, ncol = 1, align = 'v', axis = 'l')
-    
-  } else {
-    
-    final.plot <- ggplot() + 
-      geom_rect(data=chr.lines.df, aes(xmin=start, xmax=end, ymin=-Inf, ymax=Inf, fill=col), alpha=0.5) + scale_fill_manual(values = c('gray50','gray70')) +
-      geom_step(data=plt.df, aes_string(x='pos', y='counts'), col="firebrick3") +
-      xlab("Genomic position") + 
-      ylab("Counts") + 
-      scale_x_continuous(breaks=chr.lines.df$label.pos, labels=chr.lines.df$label, expand = c(0,0)) + 
-      #geom_hline(yintercept=thresh, color='darkorange1') + 
-      my_theme + 
-      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=1))
-  }    
-  ## Return final plot
-  return(final.plot)
-}
-
-  
-#' Transform genomic coordinates
-#'
-#' Add two columns with transformed genomic coordinates to the \code{\link{GRanges-class}} object. This is useful for making genomewide plots.
-#'
-#' @param gr A \code{\link{GRanges-class}} object.
-#' @return The input \code{\link{GRanges-class}} with two additional metadata columns 'start.genome' and 'end.genome'.
-transCoord <- function(gr) {
-    cum.seqlengths <- cumsum(as.numeric(seqlengths(gr)))
-    cum.seqlengths.0 <- c(0,cum.seqlengths[-length(cum.seqlengths)])
-    names(cum.seqlengths.0) <- GenomeInfoDb::seqlevels(gr)
-    gr$start.genome <- start(gr) + cum.seqlengths.0[as.character(seqnames(gr))]
-    gr$end.genome <- end(gr) + cum.seqlengths.0[as.character(seqnames(gr))]
-    return(gr)
-}

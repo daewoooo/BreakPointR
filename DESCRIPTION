@@ -1,7 +1,7 @@
 Package: breakpointR
 Type: Package
 Title: Find breakpoints in Strand-seq data
-Version: 0.99.10
+Version: 1.5.1
 Date: 2015-10-05
 Author: David Porubsky, Ashley Sanders, Aaron Taudt
 Maintainer: David Porubsky <david.porubsky@gmail.com>
@@ -36,4 +36,4 @@ VignetteBuilder: knitr
 Packaged: 2015-09-19 13:29:00 CET+1; Taudt
 biocViews: Software, Sequencing, DNASeq, SingleCell, Coverage
 URL: https://github.com/daewoooo/BreakPointR
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1

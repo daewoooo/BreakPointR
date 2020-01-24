@@ -7,8 +7,8 @@
 runBreakpointr(bamfile, ID = basename(bamfile), pairedEndReads = TRUE,
   chromosomes = NULL, windowsize = 1e+06, binMethod = "size",
   trim = 10, peakTh = 0.33, zlim = 3.291, background = 0.05,
-  min.mapq = 10, pair2frgm = FALSE, filtAlt = FALSE, minReads = 20,
-  maskRegions = NULL, conf = 0.99)
+  min.mapq = 10, pair2frgm = FALSE, filtAlt = FALSE,
+  genoT = "fisher", minReads = 20, maskRegions = NULL, conf = 0.99)
 }
 \arguments{
 \item{bamfile}{A file with aligned reads in BAM format.}
@@ -37,6 +37,8 @@ runBreakpointr(bamfile, ID = basename(bamfile), pairedEndReads = TRUE,
 
 \item{filtAlt}{Set to \code{TRUE} if you want to filter out alternative alignments defined in 'XA' tag.}
 
+\item{genoT}{A method ('fisher' or 'binom') to genotype regions defined by a set of breakpoints.}
+
 \item{minReads}{The minimal number of reads between two breaks required for genotyping.}
 
 \item{maskRegions}{List of regions to be excluded from the analysis (tab-separated file: chromosomes start end).}
@@ -60,12 +62,11 @@ Breakpoints are located in the following way:
 }
 }
 \examples{
-\dontrun{ 
 ## Get an example file
 exampleFolder <- system.file("extdata", "example_bams", package="breakpointRdata")
 exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
 ## Run breakpointR
-brkpts <- runBreakpointr(exampleFile, chromosomes='chr22', pairedEndReads=FALSE)}
+brkpts <- runBreakpointr(exampleFile, chromosomes='chr22', pairedEndReads=FALSE)
 
 }
 \author{

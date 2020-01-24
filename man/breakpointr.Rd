@@ -7,9 +7,10 @@
 breakpointr(inputfolder, outputfolder, configfile = NULL, numCPU = 1,
   reuse.existing.files = FALSE, windowsize = 1e+06,
   binMethod = "size", pairedEndReads = FALSE, pair2frgm = FALSE,
-  chromosomes = NULL, min.mapq = 10, filtAlt = FALSE, trim = 10,
-  peakTh = 0.33, zlim = 3.291, background = 0.05, minReads = 10,
-  maskRegions = NULL, callHotSpots = FALSE, conf = 0.99)
+  chromosomes = NULL, min.mapq = 10, filtAlt = FALSE,
+  genoT = "fisher", trim = 10, peakTh = 0.33, zlim = 3.291,
+  background = 0.05, minReads = 10, maskRegions = NULL,
+  callHotSpots = FALSE, conf = 0.99)
 }
 \arguments{
 \item{inputfolder}{Folder with BAM files.}
@@ -35,6 +36,8 @@ breakpointr(inputfolder, outputfolder, configfile = NULL, numCPU = 1,
 \item{min.mapq}{Minimum mapping quality when importing from BAM files.}
 
 \item{filtAlt}{Set to \code{TRUE} if you want to filter out alternative alignments defined in 'XA' tag.}
+
+\item{genoT}{A method ('fisher' or 'binom') to genotype regions defined by a set of breakpoints.}
 
 \item{trim}{The amount of outliers in deltaWs removed to calculate the stdev (10 will remove top 10\% and bottom 10\% of deltaWs).}
 
@@ -65,5 +68,5 @@ breakpointr(inputfolder="my-data-folder", outputfolder="my-output-folder")}
 
 }
 \author{
-Aaron Taudt, David Porubsky, Ashley Sanders
+David Porubsky, Aaron Taudt, Ashley Sanders
 }

@@ -6,15 +6,15 @@
 #'
 #' @param file.list A list of BAM files to process.
 #' @inheritParams readBamFileAsGRanges
+#' @inheritParams GenotypeBreaks
 #' @param WC.cutoff Percentage of WW or CC reads to consider chromosome being WW or CC
-#' @param background The amount of background introduced into the genotype test.
 #' @return A \code{\link{GRanges-class}} object.
 #' @importFrom gtools mixedsort
 #' @importFrom BiocGenerics table
 #' @import GenomicRanges
 #' @author Ashley Sanders, David Porubsky
 #'                    
-createCompositeFile <- function(file.list, chromosomes=NULL, pairedEndReads=TRUE, pair2frgm=FALSE, min.mapq=10, filtAlt=FALSE, WC.cutoff=0.90, background=0.05) {
+createCompositeFile <- function(file.list, chromosomes=NULL, pairedEndReads=TRUE, pair2frgm=FALSE, min.mapq=10, filtAlt=FALSE, WC.cutoff=0.90, genoT='fisher', background=0.05) {
 
     message("Creating composite file from ", length(file.list), " bam files")
 
@@ -45,8 +45,16 @@ createCompositeFile <- function(file.list, chromosomes=NULL, pairedEndReads=TRUE
             #     composite.bam[[chr]] <- chr.fragments
             # }
             
-            ## Alternatively use Fisher's test to genotype
-            geno <- genotype.fisher(cReads=plus.count, wReads=minus.count, roiReads=plus.count+minus.count, background=background, minReads = 10)
+            if (genoT == 'fisher') {
+                ## Use Fisher Exact Test to genotype
+                geno <- genotype.fisher(cReads=plus.count, wReads=minus.count, roiReads=plus.count+minus.count, background=background, minReads = 10)
+            } else if (genoT == 'binom') {    
+                ## Use binomial test to genotype
+                geno <- genotype.binom(cReads=plus.count, wReads=minus.count, background=background, log = TRUE)
+            } else {
+                stop("Wrong argument 'genoT', genoT='fisher|binom'")
+            } 
+            
             ## check if this is a pure (WW or CC) library
             if (geno$bestFit == 'ww' | geno$bestFit == 'cc') {
                 ## if this is pure WW, reverse compliment all the reads

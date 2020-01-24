@@ -2,12 +2,12 @@
 % Please edit documentation in R/rwConfig.R
 \name{writeConfig}
 \alias{writeConfig}
-\title{Write BreakpointR configuration file}
+\title{Write breakpointR configuration file}
 \usage{
-writeConfig(conf, configfile)
+writeConfig(config, configfile)
 }
 \arguments{
-\item{conf}{A list structure with parameter values. Each entry will be written in one line.}
+\item{config}{A list structure with parameter values. Each entry will be written in one line.}
 
 \item{configfile}{Filename of the outputfile.}
 }
@@ -15,7 +15,7 @@ writeConfig(conf, configfile)
 \code{NULL}
 }
 \description{
-Write an BreakpointR configuration file from a list structure.
+Write an breakpointR configuration file from a list structure.
 }
 \author{
 Aaron Taudt

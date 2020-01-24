@@ -6,7 +6,8 @@
 \usage{
 createCompositeFile(file.list, chromosomes = NULL,
   pairedEndReads = TRUE, pair2frgm = FALSE, min.mapq = 10,
-  filtAlt = FALSE, WC.cutoff = 0.9, background = 0.05)
+  filtAlt = FALSE, WC.cutoff = 0.9, genoT = "fisher",
+  background = 0.05)
 }
 \arguments{
 \item{file.list}{A list of BAM files to process.}
@@ -23,7 +24,9 @@ createCompositeFile(file.list, chromosomes = NULL,
 
 \item{WC.cutoff}{Percentage of WW or CC reads to consider chromosome being WW or CC}
 
-\item{background}{The amount of background introduced into the genotype test.}
+\item{genoT}{A method ('fisher' or 'binom') to genotype regions defined by a set of breakpoints.}
+
+\item{background}{The percent (e.g. 0.05 = 5\%) of background reads allowed for WW or CC genotype calls.}
 }
 \value{
 A \code{\link{GRanges-class}} object.

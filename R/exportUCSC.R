@@ -1,25 +1,6 @@
-#' Export genome browser compatible files
+#' Export UCSC browser formated files
 #'
-#' Use \code{writeBedFile} ...
-#' Use \code{exportUCSC} ...
-#'
-#' @return \code{NULL}
-#' @name export
-NULL
-
-## Insert chromosome ('chr') in cases it's missing
-insertchr <- function(hmm.gr) {
-  mask <- which(!grepl('chr', seqnames(hmm.gr)))
-  mcols(hmm.gr)$chromosome <- as.character(seqnames(hmm.gr))
-  mcols(hmm.gr)$chromosome[mask] <- sub(pattern='^', replacement='chr', mcols(hmm.gr)$chromosome[mask])
-  mcols(hmm.gr)$chromosome <- as.factor(mcols(hmm.gr)$chromosome)
-  return(hmm.gr)
-}
-
-
-#' Generates a bedfile from inFile
-#'
-#' Write a bedfile from Breakpoint.R files for upload on to UCSC Genome browser
+#' Write a bedfile or bedgraph from a breakpointR object for upload on to the UCSC Genome browser.
 #'
 #' @param index A character used to name the bedfile(s).
 #' @param outputDirectory Location to write bedfile(s).
@@ -28,7 +9,6 @@ insertchr <- function(hmm.gr) {
 #' @param breakTrack A \code{\link{GRanges-class}} object with metadata "genoT" (e.g. newBreaks) will write a bedtrack with refined breakpoints.
 #' @param confidenceIntervals A \code{\link{GRanges-class}} object with metadata "genoT" the same length as \code{breakTrack} (e.g. confint) will write a bedtrack with breakpoints confidence intervals.
 #' @param breaksGraph A \code{\link{GRanges-class}} object.
-#' @param col A string with two RGB values separated by a space specifying the color for the two strands.
 #' @return \code{NULL}
 #' @author Ashley Sanders, David Porubsky, Aaron Taudt
 #' @importFrom utils write.table
@@ -40,16 +20,17 @@ insertchr <- function(hmm.gr) {
 #'## Load the file 
 #'brkpts <- get(load(exampleFile))
 #'## Write results to BED files
-#'writeBedFile(index='testfile', outputDirectory=tempdir(), breakTrack=brkpts$breaks)
+#'breakpointr2UCSC(index='testfile', outputDirectory=tempdir(), breakTrack=brkpts$breaks)
          
-writeBedFile <- function(index, outputDirectory, fragments=NULL, deltaWs=NULL, breakTrack=NULL, confidenceIntervals=NULL, breaksGraph=NULL, col="103,139,139 243,165,97") {
-
+breakpointr2UCSC <- function(index, outputDirectory, fragments=NULL, deltaWs=NULL, breakTrack=NULL, confidenceIntervals=NULL, breaksGraph=NULL) {
+  
     ## Write read fragments to file
     if (!is.null(fragments) & length(fragments) > 0) {
         fragments <- insertchr(fragments)
         savefile.reads <- file.path(outputDirectory, paste0(index, '_reads.bed.gz'))
         ptm <- startTimedMessage("Writing to file ", savefile.reads, " ...")
         savefile.reads.gz <- gzfile(savefile.reads, 'w')
+        col="103,139,139 243,165,97" # Set specific Strand-seq colors
         head_reads <- paste0('track name=', index, '_reads visibility=1 colorByStrand="', col, '"') 
         utils::write.table(head_reads, file=savefile.reads.gz, row.names=FALSE, col.names=FALSE, quote=FALSE, append=FALSE, sep='\t')   
         if (length(fragments)>0) {
@@ -64,7 +45,7 @@ writeBedFile <- function(index, outputDirectory, fragments=NULL, deltaWs=NULL, b
         stopTimedMessage(ptm)
     }
 
-    ## Write breakPoints and confidence intervals to file
+    ## Write breakpoints and confidence intervals to file
     if (!is.null(breakTrack) & length(breakTrack) > 0) {
         breakTrack <- insertchr(breakTrack)
         savefile.breakPoints <- file.path(outputDirectory, paste0(index, '_breakPoints.bed.gz'))
@@ -133,7 +114,7 @@ writeBedFile <- function(index, outputDirectory, fragments=NULL, deltaWs=NULL, b
 #' Write a bedfile from Breakpoint.R files for upload on to UCSC Genome browser
 #'
 #' @param gr A \code{\link{GRanges-class}} object with genomic ranges to be exported into UCSC format.
-#' @inheritParams writeBedFile
+#' @inheritParams breakpointr2UCSC
 #' @param colorRGB An RGB color to be used for submitted ranges.
 #' @return \code{NULL}
 #' @author David Porubsky
@@ -146,11 +127,11 @@ writeBedFile <- function(index, outputDirectory, fragments=NULL, deltaWs=NULL, b
 #'## Load the file 
 #'counts <- get(load(exampleFile))[['counts']]
 #'## Export 'wc' states into a UCSC formated file
-#'exportUCSC(gr=counts[counts$states == 'wc'], index='testfile', outputDirectory=tempdir())
+#'ranges2UCSC(gr=counts[counts$states == 'wc'], index='testfile', outputDirectory=tempdir())
 
-exportUCSC <- function(gr, outputDirectory=".", index="bedFile", colorRGB='0,0,0') {
-    
-    ## Insert 'chr' before chromosome number
+ranges2UCSC <- function(gr, outputDirectory=".", index="bedFile", colorRGB='0,0,0') {
+  
+    ## Insert 'chr' before chromosome number if missing
     gr <- insertchr(gr)
   
     ## Prepare file for bed export
@@ -161,14 +142,14 @@ exportUCSC <- function(gr, outputDirectory=".", index="bedFile", colorRGB='0,0,0
     ## Write a header to the file
     header <- paste('track name=', index, ' description=Bed_regions_',index,' visibility=dense color=',colorRGB, sep="")
     utils::write.table(header, file=savefile.gz, row.names=FALSE, col.names=FALSE, quote=FALSE, append=FALSE, sep='\t')
-    
+  
     ## Write the rest of the file  
     if (length(gr)>0) {
-        bedG <- as.data.frame(gr)[c('chromosome','start','end')]
+        bedF <- as.data.frame(gr)[c('chromosome','start','end')]
     } else {
-        bedG <- data.frame(chromosome='chr1', start=1, end=1)
+        bedF <- data.frame(chromosome='chr1', start=1, end=1)
     }
-    utils::write.table(bedG, file=savefile.gz, row.names=FALSE, col.names=FALSE, quote=FALSE, append=TRUE, sep='\t')
+    utils::write.table(bedF, file=savefile.gz, row.names=FALSE, col.names=FALSE, quote=FALSE, append=TRUE, sep='\t')
     close(savefile.gz)
   
     stopTimedMessage(ptm)

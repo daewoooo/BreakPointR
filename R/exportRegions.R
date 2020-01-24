@@ -30,7 +30,7 @@ exportRegions <- function(datapath, file=NULL, collapseInversions=FALSE, collaps
         if (collapseInversions & collapseRegionSize > 0 & state=='wc') {
             grl <- GenomicRanges::split(counts, seqnames(counts)) #split GRanges into a list of ranges per chromosome
             gr.all <- GenomicRanges::GRanges()
-            for (i in 1:length(grl)) {
+            for (i in seq_along(grl)) {
                 gr.chr <- grl[[i]]
 
                 ## Get index of each region smaller than specified 'regionSize' with WW or CC inherirtance
