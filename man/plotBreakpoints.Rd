@@ -22,7 +22,7 @@ This function will create genome-wide ideograms from a \code{\link{BreakPoint}} 
 exampleFolder <- system.file("extdata", "example_results", package="breakpointRdata")
 exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
 ## Plot the file
-plotBreakpoints(files2plot=exampleFile)
+plotBreakpoints(exampleFile)
 }
 \author{
 David Porubsky, Aaron Taudt, Ashley Sanders

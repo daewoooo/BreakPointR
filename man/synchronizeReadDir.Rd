@@ -18,11 +18,11 @@ A \code{\link{GRanges-class}} object that reads synchronized by directionality.
 This function aims to synchronize strand directionality of reads that fall into WW and CC regions.
 }
 \examples{
+
 ## Get some files that you want to load
 exampleFolder <- system.file("extdata", "example_results", package="breakpointRdata")
 files2sync <- list.files(exampleFolder, full.names=TRUE)[1]
-synchronizeReadDir(files2sync=files2sync)
-
+synchronizeReadDir(files2sync)
 }
 \author{
 David Porubsky

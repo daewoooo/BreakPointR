@@ -29,7 +29,7 @@ exampleFile <- list.files(exampleFolder, full.names=TRUE)[1]
 ## Load the file 
 breakpoint.objects <- get(load(exampleFile))
 ## Calculate confidence intervals of genotyped breakpoints
-confint <- confidenceInterval(breaks=breakpoint.objects$breaks, fragments=breakpoint.objects$fragments, background=0.02)}
+confint <- confidenceInterval(breakpoint.objects$breaks, breakpoint.objects$fragments, background=0.02)}
 
 }
 \author{

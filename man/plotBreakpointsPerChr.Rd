@@ -25,7 +25,6 @@ exampleFolder <- system.file("extdata", "example_results", package="breakpointRd
 exampleFiles <- list.files(exampleFolder, full.names=TRUE)
 ## Plot results
 plotBreakpointsPerChr(exampleFiles, chromosomes='chr7')
-
 }
 \author{
 David Porubsky
