@@ -93,14 +93,16 @@ readBamFileAsGRanges <- function(file, bamindex=file, chromosomes=NULL, pairedEn
 
             ## filter XA tag
             if (filtAlt) {
-                data.first <- is.na(mcols(data.first)$XA)
-                data.last <- is.na(mcols(data.last)$XA)
+                data.first.xa <- is.na(mcols(data.first)$XA)
+                data.last.xa <- is.na(mcols(data.last)$XA)
+                
+                mask <- data.first.xa & data.last.xa
+
+                data.first <- data.first[mask]
+                data.last <- data.last[mask]
             }
                 
-            mask <- data.first & data.last
-
-            data.first <- data.first[mask]
-            data.last <- data.last[mask]
+            
 
             ## Filter by mapping quality and duplicate reads
             if (!is.null(min.mapq)) {
